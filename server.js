@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const fetch = require('node-fetch');
+const { Redis } = require('@upstash/redis');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -10,8 +11,40 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-// In-memory database
+// Redis database (fallback to in-memory for local development)
+const redis = process.env.UPSTASH_REDIS_REST_URL ? new Redis({
+    url: process.env.UPSTASH_REDIS_REST_URL,
+    token: process.env.UPSTASH_REDIS_REST_TOKEN,
+}) : null;
+
+// Fallback in-memory storage for local development
 const portfolios = new Map();
+
+// Database helper functions
+async function savePortfolio(id, portfolio) {
+    if (redis) {
+        await redis.set(`portfolio:${id}`, JSON.stringify(portfolio));
+    } else {
+        portfolios.set(id, portfolio);
+    }
+}
+
+async function getPortfolio(id) {
+    if (redis) {
+        const data = await redis.get(`portfolio:${id}`);
+        return data ? JSON.parse(data) : null;
+    } else {
+        return portfolios.get(id) || null;
+    }
+}
+
+async function deletePortfolio(id) {
+    if (redis) {
+        await redis.del(`portfolio:${id}`);
+    } else {
+        portfolios.delete(id);
+    }
+}
 
 // Generate random ID
 function generateId() {
@@ -98,7 +131,7 @@ app.post('/api/portfolios', (req, res) => {
         expiresAt
     };
     
-    portfolios.set(id, portfolio);
+    await savePortfolio(id, portfolio);
     
     res.json({ 
         success: true, 
@@ -108,7 +141,7 @@ app.post('/api/portfolios', (req, res) => {
 });
 
 app.get('/api/portfolios/:id', async (req, res) => {
-    const portfolio = portfolios.get(req.params.id);
+    const portfolio = await getPortfolio(req.params.id);
     
     if (!portfolio) {
         return res.status(404).json({ error: 'Portfolio not found' });
@@ -116,7 +149,7 @@ app.get('/api/portfolios/:id', async (req, res) => {
     
     // Check expiration
     if (portfolio.expiresAt && new Date() > portfolio.expiresAt) {
-        portfolios.delete(req.params.id);
+        await deletePortfolio(req.params.id);
         return res.status(404).json({ error: 'Portfolio expired' });
     }
     
