@@ -104,7 +104,7 @@ async function fetchStockPrices(tickers) {
 }
 
 // Routes
-app.post('/api/portfolios', (req, res) => {
+app.post('/api/portfolios', async (req, res) => {
     const { holdings, categories, duration, email } = req.body;
     
     const id = generateId();
