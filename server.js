@@ -164,7 +164,7 @@ app.post('/api/portfolios', async (req, res) => {
         res.json({ 
             success: true, 
             id, 
-            url: `${process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : `http://localhost:${PORT}`}/p/${id}` 
+            url: `https://holdings-ten.vercel.app/p/${id}` 
         });
     } catch (error) {
         console.error('Portfolio creation error:', error);
