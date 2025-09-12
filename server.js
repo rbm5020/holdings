@@ -22,26 +22,53 @@ const portfolios = new Map();
 
 // Database helper functions
 async function savePortfolio(id, portfolio) {
-    if (redis) {
-        await redis.set(`portfolio:${id}`, JSON.stringify(portfolio));
-    } else {
+    try {
+        if (redis) {
+            await Promise.race([
+                redis.set(`portfolio:${id}`, JSON.stringify(portfolio)),
+                new Promise((_, reject) => setTimeout(() => reject(new Error('Redis timeout')), 5000))
+            ]);
+        } else {
+            portfolios.set(id, portfolio);
+        }
+    } catch (error) {
+        console.error('Redis save error:', error);
+        // Fallback to in-memory storage
         portfolios.set(id, portfolio);
     }
 }
 
 async function getPortfolio(id) {
-    if (redis) {
-        const data = await redis.get(`portfolio:${id}`);
-        return data ? JSON.parse(data) : null;
-    } else {
+    try {
+        if (redis) {
+            const data = await Promise.race([
+                redis.get(`portfolio:${id}`),
+                new Promise((_, reject) => setTimeout(() => reject(new Error('Redis timeout')), 5000))
+            ]);
+            return data ? JSON.parse(data) : null;
+        } else {
+            return portfolios.get(id) || null;
+        }
+    } catch (error) {
+        console.error('Redis get error:', error);
+        // Fallback to in-memory storage
         return portfolios.get(id) || null;
     }
 }
 
 async function deletePortfolio(id) {
-    if (redis) {
-        await redis.del(`portfolio:${id}`);
-    } else {
+    try {
+        if (redis) {
+            await Promise.race([
+                redis.del(`portfolio:${id}`),
+                new Promise((_, reject) => setTimeout(() => reject(new Error('Redis timeout')), 5000))
+            ]);
+        } else {
+            portfolios.delete(id);
+        }
+    } catch (error) {
+        console.error('Redis delete error:', error);
+        // Fallback to in-memory storage
         portfolios.delete(id);
     }
 }
@@ -105,39 +132,47 @@ async function fetchStockPrices(tickers) {
 
 // Routes
 app.post('/api/portfolios', async (req, res) => {
-    const { holdings, categories, duration, email } = req.body;
-    
-    const id = generateId();
-    const now = new Date();
-    let expiresAt = null;
-    
-    if (duration !== 'Forever') {
-        const durationMap = {
-            '1 Day': 1,
-            '1 Week': 7,
-            '1 Month': 30
+    try {
+        const { holdings, categories, duration, email } = req.body;
+        
+        const id = generateId();
+        const now = new Date();
+        let expiresAt = null;
+        
+        if (duration !== 'Forever') {
+            const durationMap = {
+                '1 Day': 1,
+                '1 Week': 7,
+                '1 Month': 30
+            };
+            const days = durationMap[duration] || 0;
+            expiresAt = new Date(now.getTime() + days * 24 * 60 * 60 * 1000);
+        }
+        
+        const portfolio = {
+            id,
+            holdings: holdings.filter(h => h.ticker && h.ticker.trim()),
+            categories,
+            duration,
+            email,
+            createdAt: now,
+            expiresAt
         };
-        const days = durationMap[duration] || 0;
-        expiresAt = new Date(now.getTime() + days * 24 * 60 * 60 * 1000);
+        
+        await savePortfolio(id, portfolio);
+        
+        res.json({ 
+            success: true, 
+            id, 
+            url: `${process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : `http://localhost:${PORT}`}/p/${id}` 
+        });
+    } catch (error) {
+        console.error('Portfolio creation error:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: 'Failed to create portfolio' 
+        });
     }
-    
-    const portfolio = {
-        id,
-        holdings: holdings.filter(h => h.ticker && h.ticker.trim()),
-        categories,
-        duration,
-        email,
-        createdAt: now,
-        expiresAt
-    };
-    
-    await savePortfolio(id, portfolio);
-    
-    res.json({ 
-        success: true, 
-        id, 
-        url: `${process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : `http://localhost:${PORT}`}/p/${id}` 
-    });
 });
 
 app.get('/api/portfolios/:id', async (req, res) => {
