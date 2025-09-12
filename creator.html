@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Holdings.me Portfolio Creator</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f7; color: #333; }
+        @media (prefers-color-scheme: dark) { body { background: #1a1a1a; color: #f9fafb; } }
+        .container { max-width: 800px; margin: 0 auto; padding: 20px; }
+        
+        .branding { text-align: center; margin-bottom: 32px; padding: 20px 0; border-bottom: 1px solid #e2e8f0; }
+        @media (prefers-color-scheme: dark) { .branding { border-bottom-color: #374151; } }
+        .logo-container { display: inline-flex; align-items: center; background: rgba(15, 23, 42, 0.04); padding: 16px 24px; border-radius: 16px; margin-bottom: 16px; border: 1px solid rgba(15, 23, 42, 0.08); }
+        @media (prefers-color-scheme: dark) { .logo-container { background: rgba(59, 130, 246, 0.1); border-color: rgba(59, 130, 246, 0.2); } }
+        .logo-icon { width: 32px; height: 32px; background: linear-gradient(135deg, #1e40af 0%, #3730a3 100%); border-radius: 50%; margin-right: 12px; position: relative; }
+        .logo-icon::before { content: ''; position: absolute; width: 16px; height: 3px; background: white; border-radius: 1px; top: 8px; left: 50%; transform: translateX(-50%); }
+        .logo-icon::after { content: ''; position: absolute; width: 12px; height: 3px; background: rgba(255,255,255,0.7); border-radius: 1px; top: 15px; left: 50%; transform: translateX(-50%); }
+        .chart-line { position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); width: 8px; height: 3px; background: rgba(255,255,255,0.4); border-radius: 1px; }
+        .logo { font-size: 1.75rem; font-weight: 800; color: #0f172a; letter-spacing: -0.5px; }
+        .domain { font-size: 1.75rem; font-weight: 400; color: #64748b; letter-spacing: -0.5px; }
+        @media (prefers-color-scheme: dark) { .logo { color: #f8fafc; } }
+        .tagline { font-size: 0.875rem; color: #64748b; margin-bottom: 12px; }
+        @media (prefers-color-scheme: dark) { .tagline { color: #94a3b8; } }
+        
+        .page-title { text-align: center; font-size: 1.8rem; font-weight: 600; margin-bottom: 25px; }
+        @media (prefers-color-scheme: dark) { .page-title { color: #f9fafb; } }
+        .form-section { background: white; border-radius: 12px; padding: 30px; margin-bottom: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        @media (prefers-color-scheme: dark) { .form-section { background: #2a2a2a; } }
+        .section-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 15px; }
+        @media (prefers-color-scheme: dark) { .section-title { color: #f9fafb; } }
+        .section-subtitle { font-size: 0.9rem; color: #6b7280; margin-bottom: 20px; }
+        @media (prefers-color-scheme: dark) { .section-subtitle { color: #9ca3af; } }
+        
+        .spreadsheet { border: 1px solid #e5e7eb; border-radius: 8px; background: white; overflow: hidden; margin-bottom: 20px; }
+        @media (prefers-color-scheme: dark) { .spreadsheet { background: #1f1f1f; border-color: #404040; } }
+        .spreadsheet-header { display: grid; grid-template-columns: 2fr 1.5fr 60px 50px; background: #f8f9fa; font-weight: 600; font-size: 0.9rem; color: #6b7280; }
+        @media (prefers-color-scheme: dark) { .spreadsheet-header { background: #333333; color: #a1a1aa; } }
+        .spreadsheet-header div { padding: 12px 8px; border-right: 1px solid #e5e7eb; text-align: center; }
+        @media (prefers-color-scheme: dark) { .spreadsheet-header div { border-right-color: #404040; } }
+        .spreadsheet-header div:first-child { text-align: left; }
+        .spreadsheet-header div:last-child { border-right: none; }
+        .spreadsheet-row { display: grid; grid-template-columns: 2fr 1.5fr 60px 50px; border-bottom: 1px solid #f1f3f4; }
+        @media (prefers-color-scheme: dark) { .spreadsheet-row { border-bottom-color: #404040; } }
+        .spreadsheet-row:hover { background: #f9fafb; }
+        @media (prefers-color-scheme: dark) { .spreadsheet-row:hover { background: #404040; } }
+        .spreadsheet-cell { padding: 8px; border-right: 1px solid #f1f3f4; display: flex; align-items: center; justify-content: center; }
+        @media (prefers-color-scheme: dark) { .spreadsheet-cell { border-right-color: #404040; } }
+        .spreadsheet-cell:first-child { justify-content: flex-start; }
+        .spreadsheet-cell:last-child { border-right: none; }
+        .cell-input { width: 100%; border: none; background: transparent; padding: 6px; font-size: 14px; outline: none; text-align: center; color: inherit; }
+        .cell-input:first-child { text-align: left; }
+        .cell-input:focus { background: white; border: 2px solid #667eea; border-radius: 4px; }
+        @media (prefers-color-scheme: dark) { .cell-input:focus { background: #2a2a2a; color: #f9fafb; } }
+        
+        .category-dot { width: 24px; height: 24px; border-radius: 50%; border: 2px solid #e5e7eb; cursor: pointer; }
+        @media (prefers-color-scheme: dark) { .category-dot { border-color: #6b7280; } }
+        .color-none { background: transparent; }
+        .color-stocks { background: #0173b2; }
+        .color-etfs { background: #029e73; }
+        .color-crypto { background: #d55e00; }
+        .color-bonds { background: #cc78bc; }
+        .color-reits { background: #ca9161; }
+        .color-commodities { background: #fbafe4; }
+        
+        .delete-btn { background: transparent; border: none; color: #dc2626; cursor: pointer; font-size: 16px; opacity: 0.7; }
+        .delete-btn:hover { opacity: 1; }
+        @media (prefers-color-scheme: dark) { .delete-btn { color: #ef4444; } }
+        .add-btn { background: #f3f4f6; color: #6b7280; border: 2px dashed #d1d5db; padding: 12px 20px; border-radius: 8px; cursor: pointer; width: 100%; }
+        .add-btn:hover { background: #e5e7eb; }
+        @media (prefers-color-scheme: dark) { .add-btn { background: #374151; color: #9ca3af; border-color: #4b5563; } .add-btn:hover { background: #4b5563; } }
+        
+        .groups-display { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 15px; min-height: 40px; }
+        .group-tag { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 16px; font-size: 13px; color: white; }
+        .group-delete { background: rgba(255,255,255,0.3); border: none; border-radius: 50%; width: 16px; height: 16px; cursor: pointer; color: white; }
+        .group-input { flex: 1; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px; background: white; color: #374151; }
+        @media (prefers-color-scheme: dark) { .group-input { background: #2a2a2a; border-color: #6b7280; color: #f9fafb; } }
+        .group-input-container { display: flex; gap: 10px; }
+        .add-group-btn { padding: 8px 16px; background: #667eea; color: white; border: none; border-radius: 6px; cursor: pointer; }
+        
+        .duration-select, .email-input { width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; background: white; color: #374151; }
+        @media (prefers-color-scheme: dark) { .duration-select, .email-input { background: #2a2a2a; border-color: #6b7280; color: #f9fafb; } }
+        .submit-btn { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 18px 40px; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; width: 100%; }
+        .submit-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="branding">
+            <div class="logo-container">
+                <div class="logo-icon"><div class="chart-line"></div></div>
+                <span class="logo">Holdings</span><span class="domain">.me</span>
+            </div>
+            <div class="tagline">Portfolio snapshot, simplified</div>
+        </div>
+
+        <h1 class="page-title">Create Portfolio</h1>
+
+        <div class="form-section">
+            <h2 class="section-title">Holdings</h2>
+            <p class="section-subtitle">Enter your portfolio holdings below</p>
+            
+            <div class="spreadsheet">
+                <div class="spreadsheet-header">
+                    <div>Ticker</div><div>Qty</div><div>Type</div><div></div>
+                </div>
+                <div id="spreadsheetBody"></div>
+            </div>
+            
+            <button class="add-btn" onclick="addMoreHoldings()">+ Add More Holdings</button>
+        </div>
+
+        <div class="form-section">
+            <h2 class="section-title">Portfolio Categories</h2>
+            <div class="groups-display" id="groupsDisplay"></div>
+            <div class="group-input-container">
+                <input type="text" class="group-input" id="groupInput" placeholder="Add category">
+                <button class="add-group-btn" onclick="addGroup()">Add</button>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h2 class="section-title">Snapshot Expiration</h2>
+            <p class="section-subtitle">How long should we keep your portfolio accessible?</p>
+            <select class="duration-select">
+                <option>Forever</option><option>1 Month</option><option>1 Week</option><option>1 Day</option>
+            </select>
+        </div>
+
+        <div class="form-section">
+            <h2 class="section-title">Magic Link</h2>
+            <p class="section-subtitle">We'll generate a unique URL to access and edit your portfolio anytime.</p>
+            <h3 style="font-size: 1rem; font-weight: 600; margin: 20px 0 8px 0; color: #374151;">Email (Optional)</h3>
+            <p style="font-size: 0.85rem; color: #6b7280; margin-bottom: 12px;">Enter your email to have the magic link sent to you for easy access.</p>
+            <style>
+                @media (prefers-color-scheme: dark) {
+                    h3[style*="color: #374151"] { color: #f9fafb !important; }
+                    p[style*="color: #6b7280"] { color: #9ca3af !important; }
+                    p[style*="color: #9ca3af"] { color: #6b7280 !important; }
+                }
+            </style>
+            <input type="email" class="email-input" placeholder="Enter your email address (optional)">
+            <p style="font-size: 0.75rem; color: #9ca3af; margin-top: 8px;">We'll only use your email once to send the link. No storage, no spam, no marketing.</p>
+        </div>
+
+        <button class="submit-btn" onclick="createPortfolio()">Create Portfolio</button>
+    </div>
+
+    <script>
+        let groups = ['Stocks', 'ETFs', 'Crypto', 'Bonds'];
+        let groupColors = { 'Stocks': 'color-stocks', 'ETFs': 'color-etfs', 'Crypto': 'color-crypto', 'Bonds': 'color-bonds', 'REITs': 'color-reits', 'Commodities': 'color-commodities' };
+        let holdingsCount = 0;
+
+        function renderGroupTags() {
+            const container = document.getElementById('groupsDisplay');
+            container.innerHTML = '';
+            groups.forEach(group => {
+                const tag = document.createElement('div');
+                tag.className = `group-tag ${groupColors[group]}`;
+                tag.innerHTML = `<span>${group}</span><button class="group-delete" onclick="removeGroup('${group}')">×</button>`;
+                container.appendChild(tag);
+            });
+        }
+
+        function addGroup() {
+            const input = document.getElementById('groupInput');
+            const name = input.value.trim();
+            if (name && !groups.includes(name)) {
+                const colors = ['color-stocks', 'color-etfs', 'color-crypto', 'color-bonds', 'color-reits', 'color-commodities'];
+                groupColors[name] = colors[groups.length % colors.length];
+                groups.push(name);
+                input.value = '';
+                renderGroupTags();
+                updateDropdowns();
+            }
+        }
+
+        function removeGroup(name) {
+            groups = groups.filter(g => g !== name);
+            delete groupColors[name];
+            renderGroupTags();
+            updateDropdowns();
+        }
+
+        function updateDropdowns() {
+            document.querySelectorAll('.category-select').forEach(select => {
+                const current = select.value;
+                select.innerHTML = '<option value="">—</option>';
+                groups.forEach(group => {
+                    const option = document.createElement('option');
+                    option.value = group;
+                    option.textContent = group;
+                    if (group === current) option.selected = true;
+                    select.appendChild(option);
+                });
+            });
+        }
+
+        function createRowWithData(data = {}) {
+            const container = document.getElementById('spreadsheetBody');
+            const row = document.createElement('div');
+            row.className = 'spreadsheet-row';
+            
+            // Real tickers in alphabetical order
+            const alphabetTickers = [
+                'AAPL', 'BABA', 'CAT', 'DIS', 'ETSY', 'F', 'GOOGL', 'HD', 'INTC', 'JNJ',
+                'KO', 'LMT', 'MSFT', 'NFLX', 'ORCL', 'PG', 'QCOM', 'RTX', 'SPY', 'TSLA',
+                'UNH', 'V', 'WMT', 'XOM', 'YUM', 'ZM'
+            ];
+            const placeholderTicker = data.ticker ? '' : alphabetTickers[holdingsCount % 26];
+            
+            row.innerHTML = `
+                <div class="spreadsheet-cell"><input class="cell-input" placeholder="${placeholderTicker}" value="${data.ticker || ''}" style="text-align: left;"></div>
+                <div class="spreadsheet-cell"><input class="cell-input" type="number" placeholder="100" value="${data.shares || ''}" style="text-align: center;"></div>
+                <div class="spreadsheet-cell" style="position:relative; justify-content: center;">
+                    <div class="category-dot ${data.group ? groupColors[data.group] || 'color-none' : 'color-none'}" onclick="this.nextElementSibling.click()"></div>
+                    <select class="category-select" onchange="updateCategoryDot(this)" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:24px;height:24px;opacity:0;cursor:pointer;border-radius:50%;">
+                        <option value="">—</option>
+                        ${groups.map(g => `<option value="${g}" ${g === (data.group || '') ? 'selected' : ''}>${g}</option>`).join('')}
+                    </select>
+                </div>
+                <div class="spreadsheet-cell"><button class="delete-btn" onclick="this.closest('.spreadsheet-row').remove()">×</button></div>
+            `;
+            container.appendChild(row);
+            holdingsCount++;
+        }
+
+        function updateCategoryDot(select) {
+            const dot = select.previousElementSibling;
+            const group = select.value;
+            dot.className = `category-dot ${group ? groupColors[group] : 'color-none'}`;
+        }
+
+        function addMoreHoldings() {
+            for(let i = 0; i < 5; i++) {
+                createRowWithData();
+            }
+        }
+
+        async function createPortfolio() {
+            // Collect holdings data
+            const holdings = [];
+            document.querySelectorAll('.spreadsheet-row').forEach(row => {
+                const inputs = row.querySelectorAll('.cell-input');
+                const ticker = inputs[0].value.trim();
+                const quantity = inputs[1].value;
+                const category = row.querySelector('.category-select').value;
+                
+                if (ticker) {
+                    holdings.push({
+                        ticker: ticker.toUpperCase(),
+                        quantity: parseFloat(quantity) || 0,
+                        category: category || null
+                    });
+                }
+            });
+            
+            // Get other form data
+            const duration = document.querySelector('.duration-select').value;
+            const email = document.querySelector('.email-input').value.trim();
+            
+            const data = {
+                holdings,
+                categories: groupColors,
+                duration,
+                email: email || null
+            };
+            
+            try {
+                const response = await fetch('/api/portfolios', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert(`Portfolio created! URL: ${result.url}`);
+                    window.open(result.url, '_blank');
+                } else {
+                    alert('Error creating portfolio: ' + result.error);
+                }
+            } catch (error) {
+                alert('Error creating portfolio: ' + error.message);
+            }
+        }
+
+        // Initialize with dummy data
+        function loadWithDummyData() {
+            const dummyData = [
+                {ticker: 'AAPL', shares: 50, group: 'Stocks'},
+                {ticker: 'BBBY', shares: 30, group: 'Stocks'},
+                {ticker: 'CRWD', shares: 15, group: 'Stocks'},
+                {ticker: 'DIS', shares: 25, group: 'Stocks'},
+                {ticker: 'ETSY', shares: 40, group: 'Stocks'}
+            ];
+            
+            dummyData.forEach(data => createRowWithData(data));
+            
+            for(let i = 0; i < 3; i++) {
+                createRowWithData();
+            }
+        }
+
+        // Initialize
+        renderGroupTags();
+        loadWithDummyData();
+    </script>
+</body>
+</html>

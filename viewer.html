@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Holdings.me - Portfolio Viewer</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f7; color: #333; line-height: 1.6; }
+        @media (prefers-color-scheme: dark) { body { background: #1a1a1a; color: #e5e5e7; } }
+        .container { max-width: 800px; margin: 0 auto; padding: 20px; }
+        
+        .branding { text-align: center; margin-bottom: 32px; padding: 20px 0; border-bottom: 1px solid #e2e8f0; }
+        @media (prefers-color-scheme: dark) { .branding { border-bottom-color: #374151; } }
+        .logo-container { display: inline-flex; align-items: center; justify-content: center; background: rgba(15, 23, 42, 0.04); padding: 16px 24px; border-radius: 16px; margin-bottom: 16px; border: 1px solid rgba(15, 23, 42, 0.08); }
+        @media (prefers-color-scheme: dark) { .logo-container { background: rgba(59, 130, 246, 0.1); border-color: rgba(59, 130, 246, 0.2); } }
+        .logo-icon { width: 32px; height: 32px; background: linear-gradient(135deg, #1e40af 0%, #3730a3 100%); border-radius: 50%; margin-right: 12px; position: relative; }
+        .logo-icon::before { content: ''; position: absolute; width: 16px; height: 3px; background: white; border-radius: 1px; top: 8px; left: 50%; transform: translateX(-50%); }
+        .logo-icon::after { content: ''; position: absolute; width: 12px; height: 3px; background: rgba(255,255,255,0.7); border-radius: 1px; top: 15px; left: 50%; transform: translateX(-50%); }
+        .chart-line { position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); width: 8px; height: 3px; background: rgba(255,255,255,0.4); border-radius: 1px; }
+        .logo { font-size: 1.75rem; font-weight: 800; color: #0f172a; letter-spacing: -0.5px; line-height: 1; }
+        .domain { font-size: 1.75rem; font-weight: 400; color: #64748b; letter-spacing: -0.5px; line-height: 1; }
+        @media (prefers-color-scheme: dark) { .logo { color: #f8fafc; } }
+        .tagline { font-size: 0.875rem; color: #64748b; font-weight: 500; letter-spacing: 0.025em; margin-bottom: 12px; }
+        @media (prefers-color-scheme: dark) { .tagline { color: #94a3b8; } }
+        
+        .header { text-align: center; margin-bottom: 20px; background: white; padding: 12px 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: 1px solid #e5e7eb; }
+        @media (prefers-color-scheme: dark) { .header { background: #2a2a2a; border-color: #404040; } }
+        .portfolio-label { font-size: 0.9rem; font-weight: 600; color: #6b7280; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .total-value { font-size: 2.8rem; font-weight: 800; color: #1f2937; line-height: 1; }
+        @media (prefers-color-scheme: dark) { .total-value { color: #f9fafb; } }
+        .total-change { font-size: 1.1rem; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; padding: 8px 16px; border-radius: 6px; }
+        .total-change:hover { background: rgba(0,0,0,0.05); }
+        @media (prefers-color-scheme: dark) { .total-change:hover { background: rgba(255,255,255,0.05); } }
+        .positive { color: #059669; }
+        .negative { color: #dc2626; }
+        
+        .category-header { padding: 12px 20px; border-radius: 8px 8px 0 0; display: flex; justify-content: space-between; align-items: center; }
+        .category-header.page-zero { background: linear-gradient(135deg, #374151 0%, #1f2937 100%); color: white; }
+        .category-header.page-positive.color-1 { background: linear-gradient(135deg, #1e40af 0%, #3730a3 100%); color: white; }
+        .category-header.page-positive.color-2 { background: linear-gradient(135deg, #059669 0%, #047857 100%); color: white; }
+        .category-header.page-positive.color-3 { background: linear-gradient(135deg, #d55e00 0%, #cc78bc 100%); color: white; }
+        .category-name { font-size: 1.1rem; font-weight: 600; }
+        .category-right { display: flex; align-items: center; gap: 8px; font-size: 1.1rem; font-weight: 600; }
+        
+        .holdings-container { border-radius: 0 0 8px 8px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); min-height: 400px; }
+        .holdings-container.bg-white { background: white !important; }
+        .holdings-container.bg-gray { background: #f9fafb !important; }
+        @media (prefers-color-scheme: dark) { .holdings-container.bg-white { background: #2a2a2a !important; } .holdings-container.bg-gray { background: #1f1f1f !important; } }
+        
+        .holdings-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        .holdings-table th { background: #f8f9fa; padding: 8px; text-align: left; font-weight: 600; font-size: 13px; color: #555; border-bottom: 1px solid #e5e7eb; }
+        @media (prefers-color-scheme: dark) { .holdings-table th { background: #333333; color: #a1a1aa; border-bottom-color: #555555; } }
+        .holdings-table td { padding: 8px; border-bottom: 1px solid #f1f3f4; }
+        @media (prefers-color-scheme: dark) { .holdings-table td { border-bottom-color: #404040; } }
+        .holdings-table tr:hover { background: rgba(0,0,0,0.02); }
+        @media (prefers-color-scheme: dark) { .holdings-table tr:hover { background: rgba(255,255,255,0.05); } }
+        
+        .pagination-container { display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: 15px; }
+        .nav-arrow { background: none; border: none; color: #6b7280; font-size: 20px; cursor: pointer; padding: 8px; border-radius: 50%; transition: all 0.2s; }
+        .nav-arrow:hover { background: rgba(0,0,0,0.1); color: #374151; }
+        .nav-arrow:disabled { opacity: 0.3; cursor: not-allowed; }
+        .nav-arrow:disabled:hover { background: none; }
+        .pagination-dots { display: flex; justify-content: center; gap: 8px; }
+        .dot { width: 8px; height: 8px; border-radius: 50%; background: #d1d5db; cursor: pointer; transition: all 0.3s; }
+        .dot.home { width: 12px; height: 8px; border-radius: 4px; background: #6b7280; }
+        .dot.active { background: #1d4ed8; transform: scale(1.2); }
+        .dot:hover { background: #9ca3af; }
+        
+        .loading { text-align: center; padding: 40px; color: #6b7280; }
+        .error { text-align: center; padding: 40px; color: #dc2626; background: #fef2f2; border-radius: 8px; margin: 20px 0; }
+        @media (prefers-color-scheme: dark) { .error { background: #7f1d1d; color: #fecaca; } }
+        
+        @media (max-width: 640px) { 
+            .container { padding: 15px; } 
+            .logo { font-size: 1.5rem; } 
+            .domain { font-size: 1.5rem; }
+            .logo-container { padding: 14px 20px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="branding">
+            <div class="logo-container">
+                <div class="logo-icon"><div class="chart-line"></div></div>
+                <span class="logo">Holdings</span><span class="domain">.me</span>
+            </div>
+            <div class="tagline">Portfolio snapshot, simplified</div>
+        </div>
+
+        <div id="loading" class="loading">
+            Loading portfolio...
+        </div>
+
+        <div id="error" class="error" style="display: none;"></div>
+
+        <div id="portfolio-content" style="display: none;">
+            <div class="header">
+                <div class="portfolio-label">Total</div>
+                <div class="total-value" id="totalValue">$0.00</div>
+                <div class="total-change" id="totalChange" onclick="toggleChangeDisplay()">
+                    <span id="changeArrow">↓</span>
+                    <span id="changeText">$0.00</span>
+                </div>
+            </div>
+
+            <div class="category-header page-zero" id="categoryHeader">
+                <div class="category-name" id="categoryName">All Holdings</div>
+                <div class="category-right">
+                    <span id="categoryTotal">$0.00</span>
+                    <span> | </span>
+                    <span id="categoryChange">0.0%</span>
+                </div>
+            </div>
+            
+            <div class="holdings-container bg-gray" id="holdingsContainer">
+                <table class="holdings-table">
+                    <thead>
+                        <tr>
+                            <th>Symbol</th>
+                            <th style="text-align: right;">Price</th>
+                            <th style="text-align: right;">Change</th>
+                            <th style="text-align: right;">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody id="holdingsTable"></tbody>
+                </table>
+            </div>
+
+            <div class="pagination-container">
+                <button class="nav-arrow" id="prevArrow" onclick="previousPage()">←</button>
+                <div class="pagination-dots" id="paginationDots"></div>
+                <button class="nav-arrow" id="nextArrow" onclick="nextPage()">→</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let portfolio = null;
+        let allHoldings = [];
+        let pages = [];
+        let currentPage = 0;
+        let showPercentage = false;
+        let showCategoryDailyDollar = false;
+
+        async function loadPortfolio() {
+            const pathParts = window.location.pathname.split('/');
+            const portfolioId = pathParts[pathParts.length - 1];
+            
+            if (!portfolioId) {
+                showError('Invalid portfolio URL');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/portfolios/${portfolioId}`);
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    showError(data.error || 'Portfolio not found');
+                    return;
+                }
+                
+                portfolio = data;
+                processPortfolioData();
+                
+            } catch (error) {
+                showError('Failed to load portfolio: ' + error.message);
+            }
+        }
+
+        function processPortfolioData() {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('portfolio-content').style.display = 'block';
+
+            // Flatten all holdings
+            allHoldings = portfolio.holdings.map(holding => ({
+                ...holding,
+                category: holding.category || 'Uncategorized',
+                shares: holding.quantity,
+                dailyChange: holding.change || 0
+            }));
+
+            // Group holdings by category
+            const categorizedHoldings = {};
+            allHoldings.forEach(holding => {
+                const cat = holding.category;
+                if (!categorizedHoldings[cat]) {
+                    categorizedHoldings[cat] = [];
+                }
+                categorizedHoldings[cat].push(holding);
+            });
+
+            // Create pages structure
+            pages = [];
+            
+            // Create "All Holdings" pages (overflow goes left)
+            const holdingsPerPage = 10;
+            const totalPages = Math.ceil(allHoldings.length / holdingsPerPage);
+            
+            // Create overflow pages to the left (negative page numbers)
+            for (let i = totalPages - 1; i >= 1; i--) {
+                const startIndex = i * holdingsPerPage;
+                const endIndex = Math.min((i + 1) * holdingsPerPage, allHoldings.length);
+                pages.push({
+                    type: 'all',
+                    name: 'All Holdings',
+                    holdings: allHoldings.slice(startIndex, endIndex),
+                    pageNumber: -i
+                });
+            }
+            
+            // Main "All Holdings" page (page 0)
+            pages.push({
+                type: 'all',
+                name: 'All Holdings',
+                holdings: allHoldings.slice(0, Math.min(holdingsPerPage, allHoldings.length)),
+                pageNumber: 0
+            });
+
+            // Category pages
+            let colorIndex = 1;
+            Object.entries(categorizedHoldings).forEach(([categoryName, holdings]) => {
+                pages.push({
+                    type: 'category',
+                    name: categoryName,
+                    holdings: holdings,
+                    colorIndex: colorIndex,
+                    pageNumber: colorIndex
+                });
+                colorIndex++;
+            });
+
+            // Start on home page (page number 0)
+            currentPage = pages.findIndex(page => page.pageNumber === 0);
+            updateDisplay();
+        }
+
+        function updateDisplay() {
+            updateTotalValue();
+            updateCurrentPage();
+            updatePagination();
+        }
+
+        function updateTotalValue() {
+            let total = 0;
+            let totalDailyChange = 0;
+            
+            allHoldings.forEach(holding => {
+                const value = holding.shares * holding.currentPrice;
+                const dailyChange = holding.shares * holding.dailyChange;
+                total += value;
+                totalDailyChange += dailyChange;
+            });
+
+            const yesterdayValue = total - totalDailyChange;
+            const dailyPercent = yesterdayValue > 0 ? (totalDailyChange / yesterdayValue) * 100 : 0;
+
+            document.getElementById('totalValue').textContent = `$${total.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            
+            const changeEl = document.getElementById('totalChange');
+            const arrowEl = document.getElementById('changeArrow');
+            const textEl = document.getElementById('changeText');
+            
+            const isPositive = totalDailyChange >= 0;
+            arrowEl.textContent = isPositive ? '↑' : '↓';
+            changeEl.className = `total-change ${isPositive ? 'positive' : 'negative'}`;
+            
+            if (showPercentage) {
+                textEl.textContent = `${Math.abs(dailyPercent).toFixed(2)}%`;
+            } else {
+                textEl.textContent = `$${Math.abs(totalDailyChange).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            }
+        }
+
+        function updateCurrentPage() {
+            const page = pages[currentPage];
+            const headerEl = document.getElementById('categoryHeader');
+            const containerEl = document.getElementById('holdingsContainer');
+            
+            document.getElementById('categoryName').textContent = page.name;
+            
+            if (page.type === 'all') {
+                headerEl.className = 'category-header page-zero';
+                containerEl.className = 'holdings-container bg-gray';
+                document.getElementById('categoryTotal').textContent = '';
+                document.getElementById('categoryChange').textContent = '';
+            } else {
+                headerEl.className = `category-header page-positive color-${page.colorIndex}`;
+                containerEl.className = `holdings-container ${currentPage % 2 === 0 ? 'bg-white' : 'bg-gray'}`;
+                
+                let categoryTotal = 0;
+                let categoryDailyChange = 0;
+                page.holdings.forEach(holding => {
+                    categoryTotal += holding.shares * holding.currentPrice;
+                    categoryDailyChange += holding.shares * holding.dailyChange;
+                });
+                
+                const yesterdayValue = categoryTotal - categoryDailyChange;
+                const dailyPercent = yesterdayValue > 0 ? (categoryDailyChange / yesterdayValue) * 100 : 0;
+                const isPositive = categoryDailyChange >= 0;
+                
+                document.getElementById('categoryTotal').textContent = `$${categoryTotal.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                
+                const changeElement = document.getElementById('categoryChange');
+                changeElement.style.cursor = 'pointer';
+                changeElement.onclick = toggleCategoryDailyDisplay;
+                changeElement.className = isPositive ? 'positive' : 'negative';
+                
+                if (showCategoryDailyDollar) {
+                    changeElement.textContent = `${isPositive ? '+' : ''}$${Math.abs(categoryDailyChange).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                } else {
+                    changeElement.textContent = `${isPositive ? '+' : ''}${dailyPercent.toFixed(2)}%`;
+                }
+            }
+            
+            updateHoldingsTable(page.holdings);
+        }
+
+        function updateHoldingsTable(holdings) {
+            const tbody = document.getElementById('holdingsTable');
+            tbody.innerHTML = holdings.map(holding => {
+                const dailyChange = holding.shares * holding.dailyChange;
+                return `
+                    <tr>
+                        <td style="font-weight: 600;">${holding.ticker}</td>
+                        <td style="text-align: right; font-weight: 500;">$${holding.currentPrice.toFixed(2)}</td>
+                        <td style="text-align: right; font-weight: 500;" class="${holding.dailyChange >= 0 ? 'positive' : 'negative'}">${holding.dailyChange >= 0 ? '+' : ''}$${holding.dailyChange.toFixed(2)}</td>
+                        <td style="text-align: right; font-weight: 600;" class="${dailyChange >= 0 ? 'positive' : 'negative'}">$${Math.abs(dailyChange).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function updatePagination() {
+            const dotsEl = document.getElementById('paginationDots');
+            const prevBtn = document.getElementById('prevArrow');
+            const nextBtn = document.getElementById('nextArrow');
+            
+            // Update arrow states
+            prevBtn.disabled = currentPage === 0;
+            nextBtn.disabled = currentPage === pages.length - 1;
+            
+            // Show max 5 dots
+            const maxDots = 5;
+            let startIndex = 0;
+            let endIndex = Math.min(pages.length, maxDots);
+            
+            if (pages.length > maxDots) {
+                const center = Math.floor(maxDots / 2);
+                startIndex = Math.max(0, Math.min(currentPage - center, pages.length - maxDots));
+                endIndex = startIndex + maxDots;
+            }
+            
+            const visiblePages = pages.slice(startIndex, endIndex);
+            
+            dotsEl.innerHTML = visiblePages.map((page, index) => {
+                const actualIndex = startIndex + index;
+                const activeClass = actualIndex === currentPage ? 'active' : '';
+                const homeClass = page.pageNumber === 0 ? 'home' : '';
+                return `<div class="dot ${homeClass} ${activeClass}" onclick="goToPage(${actualIndex})"></div>`;
+            }).join('');
+        }
+
+        function goToPage(pageIndex) {
+            currentPage = pageIndex;
+            updateDisplay();
+        }
+
+        function previousPage() {
+            if (currentPage > 0) {
+                currentPage--;
+                updateDisplay();
+            }
+        }
+
+        function nextPage() {
+            if (currentPage < pages.length - 1) {
+                currentPage++;
+                updateDisplay();
+            }
+        }
+
+        function toggleChangeDisplay() {
+            showPercentage = !showPercentage;
+            updateTotalValue();
+        }
+
+        function toggleCategoryDailyDisplay() {
+            showCategoryDailyDollar = !showCategoryDailyDollar;
+            updateCurrentPage();
+        }
+
+        function showError(message) {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('error').style.display = 'block';
+            document.getElementById('error').textContent = message;
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') previousPage();
+            if (e.key === 'ArrowRight') nextPage();
+        });
+
+        // Touch navigation
+        let touchStartX = 0;
+        document.addEventListener('touchstart', (e) => {
+            touchStartX = e.changedTouches[0].screenX;
+        });
+        document.addEventListener('touchend', (e) => {
+            const touchEndX = e.changedTouches[0].screenX;
+            const diff = touchStartX - touchEndX;
+            if (Math.abs(diff) > 50) {
+                if (diff > 0) nextPage();
+                else previousPage();
+            }
+        });
+
+        // Load portfolio on page load
+        loadPortfolio();
+    </script>
+</body>
+</html>
