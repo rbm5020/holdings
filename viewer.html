@@ -11,10 +11,10 @@
         .container { max-width: 800px; margin: 0 auto; padding: 20px; }
         @media (max-width: 640px) { .container { padding: 10px; } }
         
-        .branding { text-align: center; margin-bottom: 20px; padding: 15px 0; border-bottom: 1px solid #e2e8f0; }
-        @media (max-width: 640px) { .branding { margin-bottom: 15px; padding: 10px 0; } }
+        .branding { text-align: center; margin-bottom: 12px; padding: 8px 0; border-bottom: 1px solid #e2e8f0; }
+        @media (max-width: 640px) { .branding { margin-bottom: 8px; padding: 6px 0; } }
         @media (prefers-color-scheme: dark) { .branding { border-bottom-color: #374151; } }
-        .logo-container { display: inline-flex; align-items: center; justify-content: center; background: rgba(15, 23, 42, 0.04); padding: 16px 24px; border-radius: 16px; margin-bottom: 16px; border: 1px solid rgba(15, 23, 42, 0.08); }
+        .logo-container { display: inline-flex; align-items: center; justify-content: center; background: rgba(15, 23, 42, 0.04); padding: 8px 16px; border-radius: 12px; margin-bottom: 8px; border: 1px solid rgba(15, 23, 42, 0.08); }
         @media (prefers-color-scheme: dark) { .logo-container { background: rgba(59, 130, 246, 0.1); border-color: rgba(59, 130, 246, 0.2); } }
         .logo-icon { width: 32px; height: 32px; background: linear-gradient(135deg, #1e40af 0%, #3730a3 100%); border-radius: 50%; margin-right: 12px; position: relative; }
         .logo-icon::before { content: ''; position: absolute; width: 16px; height: 3px; background: white; border-radius: 1px; top: 8px; left: 50%; transform: translateX(-50%); }
@@ -23,28 +23,28 @@
         .logo { font-size: 1.75rem; font-weight: 800; color: #0f172a; letter-spacing: -0.5px; line-height: 1; }
         .domain { font-size: 1.75rem; font-weight: 400; color: #64748b; letter-spacing: -0.5px; line-height: 1; }
         @media (prefers-color-scheme: dark) { .logo { color: #f8fafc; } }
-        .tagline { font-size: 0.875rem; color: #64748b; font-weight: 500; letter-spacing: 0.025em; margin-bottom: 12px; }
+        .tagline { font-size: 0.75rem; color: #64748b; font-weight: 500; letter-spacing: 0.025em; margin-bottom: 6px; }
         @media (prefers-color-scheme: dark) { .tagline { color: #94a3b8; } }
         
-        .header { text-align: center; margin-bottom: 15px; background: white; padding: 10px 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: 1px solid #e5e7eb; }
-        @media (max-width: 640px) { .header { margin-bottom: 10px; padding: 8px 12px; } }
+        .header { text-align: center; margin-bottom: 8px; background: white; padding: 6px 12px; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: 1px solid #e5e7eb; }
+        @media (max-width: 640px) { .header { margin-bottom: 6px; padding: 4px 8px; } }
         @media (prefers-color-scheme: dark) { .header { background: #2a2a2a; border-color: #404040; } }
-        .portfolio-label { font-size: 0.9rem; font-weight: 600; color: #6b7280; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
-        .total-value { font-size: 2.8rem; font-weight: 800; color: #1f2937; line-height: 1; }
+        .portfolio-label { font-size: 0.75rem; font-weight: 600; color: #6b7280; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .total-value { font-size: 2.2rem; font-weight: 800; color: #1f2937; line-height: 0.9; margin-bottom: 2px; }
         @media (prefers-color-scheme: dark) { .total-value { color: #f9fafb; } }
-        .total-change { font-size: 1.1rem; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; padding: 8px 16px; border-radius: 6px; }
+        .total-change { font-size: 0.95rem; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 4px; cursor: pointer; padding: 4px 10px; border-radius: 4px; }
         .total-change:hover { background: rgba(0,0,0,0.05); }
         @media (prefers-color-scheme: dark) { .total-change:hover { background: rgba(255,255,255,0.05); } }
         .positive { color: #059669; }
         .negative { color: #dc2626; }
         
-        .category-header { padding: 12px 20px; border-radius: 8px 8px 0 0; display: flex; justify-content: space-between; align-items: center; }
+        .category-header { padding: 6px 12px; border-radius: 6px 6px 0 0; display: flex; justify-content: space-between; align-items: center; }
         .category-header.page-zero { background: linear-gradient(135deg, #374151 0%, #1f2937 100%); color: white; }
         .category-header.page-positive.color-1 { background: linear-gradient(135deg, #1e40af 0%, #3730a3 100%); color: white; }
         .category-header.page-positive.color-2 { background: linear-gradient(135deg, #059669 0%, #047857 100%); color: white; }
         .category-header.page-positive.color-3 { background: linear-gradient(135deg, #d55e00 0%, #cc78bc 100%); color: white; }
-        .category-name { font-size: 1.1rem; font-weight: 600; }
-        .category-right { display: flex; align-items: center; gap: 8px; font-size: 1.1rem; font-weight: 600; }
+        .category-name { font-size: 0.95rem; font-weight: 600; }
+        .category-right { display: flex; align-items: center; gap: 6px; font-size: 0.95rem; font-weight: 600; }
         
         .holdings-container { border-radius: 0 0 8px 8px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); min-height: 400px; }
         .holdings-container.bg-white { background: white !important; }
@@ -52,16 +52,16 @@
         @media (prefers-color-scheme: dark) { .holdings-container.bg-white { background: #2a2a2a !important; } .holdings-container.bg-gray { background: #1f1f1f !important; } }
         
         .holdings-table { width: 100%; border-collapse: collapse; font-size: 14px; }
-        .holdings-table th { background: #f8f9fa; padding: 8px; text-align: left; font-weight: 600; font-size: 13px; color: #555; border-bottom: 1px solid #e5e7eb; }
+        .holdings-table th { background: #f8f9fa; padding: 4px 6px; text-align: left; font-weight: 600; font-size: 12px; color: #555; border-bottom: 1px solid #e5e7eb; }
         @media (prefers-color-scheme: dark) { .holdings-table th { background: #333333; color: #a1a1aa; border-bottom-color: #555555; } }
-        .holdings-table td { padding: 8px; border-bottom: 1px solid #f1f3f4; }
+        .holdings-table td { padding: 4px 6px; border-bottom: 1px solid #f1f3f4; }
         @media (prefers-color-scheme: dark) { .holdings-table td { border-bottom-color: #404040; } }
         .holdings-table tr:hover { background: rgba(0,0,0,0.02); }
         @media (prefers-color-scheme: dark) { .holdings-table tr:hover { background: rgba(255,255,255,0.05); } }
         
-        .pagination-container { display: flex; justify-content: center; align-items: center; gap: 15px; margin-bottom: 10px; }
-        @media (max-width: 640px) { .pagination-container { margin-bottom: 8px; gap: 10px; } }
-        .nav-arrow { background: none; border: none; color: #6b7280; font-size: 20px; cursor: pointer; padding: 8px; border-radius: 50%; transition: all 0.2s; }
+        .pagination-container { display: flex; justify-content: center; align-items: center; gap: 10px; margin-bottom: 6px; }
+        @media (max-width: 640px) { .pagination-container { margin-bottom: 4px; gap: 8px; } }
+        .nav-arrow { background: none; border: none; color: #6b7280; font-size: 16px; cursor: pointer; padding: 4px; border-radius: 50%; transition: all 0.2s; }
         .nav-arrow:hover { background: rgba(0,0,0,0.1); color: #374151; }
         .nav-arrow:disabled { opacity: 0.3; cursor: not-allowed; }
         .nav-arrow:disabled:hover { background: none; }
@@ -76,12 +76,12 @@
         @media (prefers-color-scheme: dark) { .error { background: #7f1d1d; color: #fecaca; } }
         
         @media (max-width: 640px) {
-            .logo { font-size: 1.4rem; }
-            .domain { font-size: 1.4rem; }
-            .logo-container { padding: 12px 16px; }
-            .total-value { font-size: 2.2rem; }
-            .holdings-table { font-size: 13px; }
-            .holdings-table th, .holdings-table td { padding: 6px 8px; }
+            .logo { font-size: 1.2rem; }
+            .domain { font-size: 1.2rem; }
+            .logo-container { padding: 6px 12px; }
+            .total-value { font-size: 1.8rem; }
+            .holdings-table { font-size: 11px; }
+            .holdings-table th, .holdings-table td { padding: 3px 4px; }
         }
     </style>
 </head>
