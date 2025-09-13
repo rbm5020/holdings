@@ -32,72 +32,10 @@ const fs = require('fs');
 const portfolios = new Map();
 const PORTFOLIO_FILE = './portfolios.json';
 
-// Load existing portfolios from dev database on startup
-loadFromDevDB();
+// Load existing portfolios on startup (if any persistence method is available)
+console.log('Server starting up...');
 
-// Save portfolios to file periodically
-function savePortfoliosToFile() {
-    try {
-        const portfolioObj = Object.fromEntries(portfolios);
-        fs.writeFileSync(PORTFOLIO_FILE, JSON.stringify(portfolioObj, null, 2));
-        console.log(`Saved ${portfolios.size} portfolios to file`);
-    } catch (error) {
-        console.error('Failed to save portfolios:', error);
-    }
-}
-
-// Use JSONBin.io as free persistent storage for development
-async function saveToJsonBin(id, portfolio) {
-    try {
-        // Using a free tier of JSONBin with no API key for development
-        const response = await fetch('https://api.jsonbin.io/v3/b', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Bin-Name': `portfolio-${id}`
-            },
-            body: JSON.stringify(portfolio)
-        });
-
-        if (response.ok) {
-            const result = await response.json();
-            console.log(`Portfolio ${id} saved to JSONBin: ${result.metadata.id}`);
-
-            // Store the bin ID for retrieval
-            portfolioBinIds.set(id, result.metadata.id);
-            return true;
-        }
-        return false;
-    } catch (error) {
-        console.log('JSONBin save failed:', error.message);
-        return false;
-    }
-}
-
-// Keep track of bin IDs for each portfolio
-const portfolioBinIds = new Map();
-
-async function loadFromJsonBin(id) {
-    try {
-        const binId = portfolioBinIds.get(id);
-        if (!binId) return null;
-
-        const response = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
-            headers: {
-                'X-Master-Key': '$2a$10$dummy.key.for.free.tier'
-            }
-        });
-
-        if (response.ok) {
-            const data = await response.json();
-            return data.record;
-        }
-        return null;
-    } catch (error) {
-        console.log('JSONBin load failed:', error.message);
-        return null;
-    }
-}
+// Simple in-memory storage for development
 
 // Debug logging to understand the persistence issue
 function debugStorage() {
