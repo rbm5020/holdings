@@ -35,31 +35,29 @@ const PORTFOLIO_FILE = './portfolios.json';
 // Load existing portfolios on startup (if any persistence method is available)
 console.log('Server starting up...');
 
-// Simple external database for development persistence
-const JSONBIN_API_KEY = process.env.JSONBIN_API_KEY || '$2a$10$N.kmcqw5M8lCHkOjFXHV9.TJvTfPOiW8HvQzOKQYqzT5y1NoCFD6u';
-const JSONBIN_BIN_ID = process.env.JSONBIN_BIN_ID || '678e5b61ad19ca34f8dc632a';
+// Reliable external database using simple REST API
+const DB_BASE_URL = 'https://jsonbox.io/box_holdings_db';
 
 async function saveToExternalDB(id, portfolio) {
     try {
-        // Get existing data
-        const existing = await loadFromExternalDB();
-        existing[id] = portfolio;
-
-        // Save back to JSONBin
-        const response = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
-            method: 'PUT',
+        // Use jsonbox.io - simple REST API, no auth needed
+        const response = await fetch(`${DB_BASE_URL}/${id}`, {
+            method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
-                'X-Master-Key': JSONBIN_API_KEY
+                'Content-Type': 'application/json'
             },
-            body: JSON.stringify(existing)
+            body: JSON.stringify({
+                id: id,
+                data: portfolio,
+                timestamp: Date.now()
+            })
         });
 
         if (response.ok) {
-            console.log(`✅ Portfolio ${id} saved to external DB`);
+            console.log(`✅ Portfolio ${id} saved to reliable DB`);
             return true;
         } else {
-            console.log(`❌ Failed to save portfolio ${id}:`, response.status);
+            console.log(`❌ Failed to save portfolio ${id}:`, response.status, await response.text());
             return false;
         }
     } catch (error) {
@@ -68,29 +66,17 @@ async function saveToExternalDB(id, portfolio) {
     }
 }
 
-async function loadFromExternalDB() {
-    try {
-        const response = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, {
-            headers: {
-                'X-Master-Key': JSONBIN_API_KEY
-            }
-        });
-
-        if (response.ok) {
-            const data = await response.json();
-            return data.record || {};
-        }
-        return {};
-    } catch (error) {
-        console.log('External DB load failed:', error.message);
-        return {};
-    }
-}
-
 async function getFromExternalDB(id) {
     try {
-        const data = await loadFromExternalDB();
-        return data[id] || null;
+        const response = await fetch(`${DB_BASE_URL}?q=id:${id}&limit=1`);
+
+        if (response.ok) {
+            const results = await response.json();
+            if (results && results.length > 0) {
+                return results[0].data;
+            }
+        }
+        return null;
     } catch (error) {
         console.log('External DB get failed:', error.message);
         return null;
