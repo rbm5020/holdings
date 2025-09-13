@@ -36,60 +36,43 @@ const PORTFOLIO_FILE = './portfolios.json';
 // Load existing portfolios on startup (if any persistence method is available)
 console.log('Server starting up...');
 
-// Simple file-based persistence
-const PORTFOLIO_DB_FILE = './dev-portfolios.txt';
+// Firebase Realtime Database REST API for persistence
+const FIREBASE_DB_URL = 'https://holdings-db-default-rtdb.firebaseio.com';
 
 async function saveToExternalDB(id, portfolio) {
     try {
-        // Write to file in a simple format: id|||json_data
-        const entry = `${id}|||${JSON.stringify(portfolio)}\n`;
+        const response = await fetch(`${FIREBASE_DB_URL}/portfolios/${id}.json`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(portfolio)
+        });
 
-        if (fs.existsSync(PORTFOLIO_DB_FILE)) {
-            // Read existing file to check if ID already exists
-            const content = fs.readFileSync(PORTFOLIO_DB_FILE, 'utf8');
-            const lines = content.split('\n').filter(line => line.trim());
-            const existingIndex = lines.findIndex(line => line.startsWith(id + '|||'));
-
-            if (existingIndex >= 0) {
-                // Replace existing entry
-                lines[existingIndex] = entry.trim();
-                fs.writeFileSync(PORTFOLIO_DB_FILE, lines.join('\n') + '\n');
-            } else {
-                // Append new entry
-                fs.appendFileSync(PORTFOLIO_DB_FILE, entry);
-            }
+        if (response.ok) {
+            console.log(`✅ Portfolio ${id} saved to Firebase DB`);
+            return true;
         } else {
-            // Create new file
-            fs.writeFileSync(PORTFOLIO_DB_FILE, entry);
+            console.log(`❌ Failed to save portfolio ${id}:`, response.status, await response.text());
+            return false;
         }
-
-        console.log(`✅ Portfolio ${id} saved to file DB`);
-        return true;
     } catch (error) {
-        console.log('File DB save failed:', error.message);
+        console.log('Firebase DB save failed:', error.message);
         return false;
     }
 }
 
 async function getFromExternalDB(id) {
     try {
-        if (!fs.existsSync(PORTFOLIO_DB_FILE)) {
-            return null;
+        const response = await fetch(`${FIREBASE_DB_URL}/portfolios/${id}.json`);
+
+        if (response.ok) {
+            const data = await response.json();
+            return data; // Firebase returns the data directly or null if not found
         }
-
-        const content = fs.readFileSync(PORTFOLIO_DB_FILE, 'utf8');
-        const lines = content.split('\n').filter(line => line.trim());
-
-        for (const line of lines) {
-            if (line.startsWith(id + '|||')) {
-                const jsonData = line.substring(id.length + 3); // Remove "id|||"
-                return JSON.parse(jsonData);
-            }
-        }
-
         return null;
     } catch (error) {
-        console.log('File DB get failed:', error.message);
+        console.log('Firebase DB get failed:', error.message);
         return null;
     }
 }
