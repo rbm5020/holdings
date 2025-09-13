@@ -231,7 +231,7 @@
                 pages.push({
                     type: 'category',
                     name: categoryName,
-                    holdings: holdings,
+                    holdings: holdings.slice(0, holdingsPerPage),
                     colorIndex: colorIndex,
                     pageNumber: colorIndex
                 });
