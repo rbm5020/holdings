@@ -297,9 +297,9 @@
                 headerEl.className = 'category-header page-zero';
                 containerEl.className = 'holdings-container bg-gray';
 
-                // Calculate total values for All Holdings
-                let totalValue = 0;
+                // Calculate daily change values for All Holdings
                 let totalDailyChange = 0;
+                let totalValue = 0;
                 allHoldings.forEach(holding => {
                     totalValue += holding.shares * holding.currentPrice;
                     totalDailyChange += holding.shares * holding.dailyChange;
@@ -309,7 +309,8 @@
                 const dailyPercent = yesterdayValue > 0 ? (totalDailyChange / yesterdayValue) * 100 : 0;
                 const isPositive = totalDailyChange >= 0;
 
-                document.getElementById('categoryTotal').textContent = `$${totalValue.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                // Clear the total amount field
+                document.getElementById('categoryTotal').textContent = '';
 
                 // Show OPPOSITE of what the total section is showing
                 const changeElement = document.getElementById('categoryChange');
