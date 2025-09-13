@@ -109,6 +109,9 @@
             </div>
             
             <button class="add-btn" onclick="addMoreHoldings()">+ Add More Holdings</button>
+
+            <!-- Create button moved up to avoid Safari bottom bar -->
+            <button class="submit-btn" onclick="createPortfolio()" style="margin-top: 30px;">Create Portfolio</button>
         </div>
 
         <div class="form-section">
@@ -143,8 +146,6 @@
             <input type="email" class="email-input" placeholder="Enter your email address (optional)">
             <p style="font-size: 0.75rem; color: #9ca3af; margin-top: 8px;">We'll only use your email once to send the link. No storage, no spam, no marketing.</p>
         </div>
-
-        <button class="submit-btn" onclick="createPortfolio()">Create Portfolio</button>
     </div>
 
     <script>
@@ -277,8 +278,12 @@
                 const result = await response.json();
                 
                 if (result.success) {
-                    alert(`Portfolio created! URL: ${result.url}`);
-                    window.open(result.url, '_blank');
+                    // Redirect to success page with both URLs
+                    const params = new URLSearchParams({
+                        viewUrl: result.viewUrl,
+                        editUrl: result.editUrl
+                    });
+                    window.location.href = `/success.html?${params.toString()}`;
                 } else {
                     alert('Error creating portfolio: ' + result.error);
                 }
@@ -306,7 +311,122 @@
 
         // Initialize
         renderGroupTags();
-        loadWithDummyData();
+        // Check if we're in edit mode
+        async function checkEditMode() {
+            const path = window.location.pathname;
+            const editMatch = path.match(/^\/edit\/([^\/]+)\/([^\/]+)$/);
+
+            if (editMatch) {
+                const [, portfolioId, editSecret] = editMatch;
+                await loadPortfolioForEdit(portfolioId, editSecret);
+            } else {
+                loadWithDummyData();
+            }
+        }
+
+        async function loadPortfolioForEdit(portfolioId, editSecret) {
+            try {
+                console.log('Loading portfolio for edit:', portfolioId);
+                const response = await fetch(`/api/edit/${portfolioId}/${editSecret}`);
+                const result = await response.json();
+
+                if (result.success) {
+                    const portfolio = result.portfolio;
+
+                    // Update page title
+                    document.title = 'Edit Portfolio - Holdings.me';
+
+                    // Update button text
+                    const submitButton = document.querySelector('button[type="submit"]');
+                    if (submitButton) {
+                        submitButton.textContent = 'Update Portfolio';
+                    }
+
+                    // Clear existing rows
+                    const tableBody = document.querySelector('.holdings-table tbody');
+                    tableBody.innerHTML = '';
+
+                    // Load portfolio data
+                    portfolio.holdings.forEach(holding => {
+                        createRowWithData({
+                            ticker: holding.ticker,
+                            shares: holding.quantity,
+                            group: portfolio.categories[0] || 'Stocks'
+                        });
+                    });
+
+                    // Add empty rows
+                    for(let i = 0; i < 3; i++) {
+                        createRowWithData();
+                    }
+
+                    // Set duration
+                    const durationSelect = document.querySelector('select[name="duration"]');
+                    if (durationSelect) {
+                        durationSelect.value = portfolio.duration;
+                    }
+
+                    // Store edit info for form submission
+                    window.editMode = {
+                        portfolioId: portfolioId,
+                        editSecret: editSecret
+                    };
+
+                } else {
+                    alert('Invalid edit link or portfolio not found');
+                    window.location.href = '/';
+                }
+            } catch (error) {
+                console.error('Error loading portfolio for edit:', error);
+                alert('Error loading portfolio for edit');
+                window.location.href = '/';
+            }
+        }
+
+        // Modified form submission to handle edit mode
+        const originalCreatePortfolio = createPortfolio;
+        window.createPortfolio = async function() {
+            if (window.editMode) {
+                await updatePortfolio();
+            } else {
+                await originalCreatePortfolio();
+            }
+        };
+
+        async function updatePortfolio() {
+            const data = collectFormData();
+            if (!data.holdings.length) {
+                alert('Please add at least one holding');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/portfolios/${window.editMode.portfolioId}/${window.editMode.editSecret}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // Redirect to success page with updated URLs
+                    const params = new URLSearchParams({
+                        viewUrl: result.viewUrl,
+                        editUrl: result.editUrl,
+                        updated: 'true'
+                    });
+                    window.location.href = `/success.html?${params.toString()}`;
+                } else {
+                    alert('Error updating portfolio: ' + result.error);
+                }
+            } catch (error) {
+                alert('Error updating portfolio: ' + error.message);
+            }
+        }
+
+        // Initialize page
+        checkEditMode();
     </script>
 </body>
 </html>

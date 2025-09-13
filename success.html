@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Holdings.me - Portfolio Created</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f7;
+            color: #333;
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        @media (prefers-color-scheme: dark) {
+            body { background: #1a1a1a; color: #e5e5e7; }
+        }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+        @media (prefers-color-scheme: dark) {
+            .container { background: #2a2a2a; }
+        }
+
+        .success-icon {
+            font-size: 4rem;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #34c759;
+            font-size: 2rem;
+        }
+
+        .warning-box {
+            background: #ff9500;
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            border: 2px solid #ff8c00;
+        }
+
+        .warning-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .warning-text {
+            font-size: 1rem;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+
+        .link-section {
+            margin-bottom: 25px;
+        }
+
+        .link-label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .link-url {
+            background: #f8f9fa;
+            border: 1px solid #e1e5e9;
+            border-radius: 8px;
+            padding: 12px;
+            font-family: monospace;
+            font-size: 0.9rem;
+            word-break: break-all;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .link-url:hover {
+            background: #e9ecef;
+        }
+        @media (prefers-color-scheme: dark) {
+            .link-url {
+                background: #3a3a3a;
+                border-color: #4a4a4a;
+                color: #e5e5e7;
+            }
+            .link-url:hover { background: #4a4a4a; }
+        }
+
+        .view-link {
+            color: #34c759;
+            border-color: #34c759;
+        }
+
+        .edit-link {
+            color: #ff9500;
+            border-color: #ff9500;
+            font-weight: 600;
+        }
+
+        .email-section {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 30px;
+        }
+        @media (prefers-color-scheme: dark) {
+            .email-section { background: #3a3a3a; }
+        }
+
+        .email-form {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .email-input {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+        @media (prefers-color-scheme: dark) {
+            .email-input {
+                background: #2a2a2a;
+                border-color: #4a4a4a;
+                color: #e5e5e7;
+            }
+        }
+
+        .email-button {
+            background: #007aff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 20px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .email-button:hover {
+            background: #0056cc;
+        }
+
+        .copy-button {
+            background: #34c759;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 8px 12px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 8px;
+            transition: background 0.2s;
+        }
+        .copy-button:hover {
+            background: #28a745;
+        }
+
+        .create-another {
+            text-align: center;
+            margin-top: 40px;
+        }
+
+        .create-another a {
+            color: #007aff;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .create-another a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="success-icon">🎉</div>
+        <h1>Portfolio Created!</h1>
+
+        <div class="warning-box">
+            <div class="warning-title">
+                🔒 IMPORTANT: Save Your Edit Link
+            </div>
+            <div class="warning-text">
+                This is the ONLY way to edit your portfolio. We don't have accounts or passwords.
+                <strong>If you lose this link, you can never edit your holdings again.</strong>
+            </div>
+            <div class="warning-text">
+                Save it now or email it to yourself below.
+            </div>
+        </div>
+
+        <div class="link-section">
+            <label class="link-label">📊 Share this link for feedback:</label>
+            <div class="link-url view-link" id="viewLink" onclick="copyToClipboard('viewLink')">
+                Loading...
+            </div>
+            <button class="copy-button" onclick="copyToClipboard('viewLink')">Copy Share Link</button>
+        </div>
+
+        <div class="link-section">
+            <label class="link-label">✏️ Use this link to edit your portfolio:</label>
+            <div class="link-url edit-link" id="editLink" onclick="copyToClipboard('editLink')">
+                Loading...
+            </div>
+            <button class="copy-button" onclick="copyToClipboard('editLink')">Copy Edit Link</button>
+        </div>
+
+        <div class="email-section">
+            <div style="font-weight: 600; margin-bottom: 10px;">📧 Email these links to yourself</div>
+            <div style="color: #666; font-size: 0.9rem;">Get a backup copy in your email (we don't store your email address)</div>
+            <div class="email-form">
+                <input type="email" class="email-input" id="emailInput" placeholder="your@email.com">
+                <button class="email-button" onclick="emailLinks()">Send Links</button>
+            </div>
+            <div id="emailStatus" style="margin-top: 10px; font-size: 0.9rem;"></div>
+        </div>
+
+        <div class="create-another">
+            <a href="/">← Create Another Portfolio</a>
+        </div>
+    </div>
+
+    <script>
+        // Get portfolio data from URL params
+        const urlParams = new URLSearchParams(window.location.search);
+        const viewUrl = urlParams.get('viewUrl');
+        const editUrl = urlParams.get('editUrl');
+
+        // Display the links
+        if (viewUrl && editUrl) {
+            document.getElementById('viewLink').textContent = viewUrl;
+            document.getElementById('editLink').textContent = editUrl;
+        } else {
+            // Fallback if no params (shouldn't happen)
+            document.querySelector('.container').innerHTML = `
+                <div style="text-align: center;">
+                    <h1>Error</h1>
+                    <p>Portfolio links not found. Please try creating your portfolio again.</p>
+                    <a href="/">Go Back</a>
+                </div>
+            `;
+        }
+
+        function copyToClipboard(elementId) {
+            const element = document.getElementById(elementId);
+            const text = element.textContent;
+
+            navigator.clipboard.writeText(text).then(() => {
+                const button = element.nextElementSibling;
+                const originalText = button.textContent;
+                button.textContent = '✓ Copied!';
+                button.style.background = '#28a745';
+
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.style.background = '';
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy: ', err);
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+            });
+        }
+
+        function emailLinks() {
+            const email = document.getElementById('emailInput').value;
+            const statusDiv = document.getElementById('emailStatus');
+
+            if (!email) {
+                statusDiv.innerHTML = '<span style="color: #ff3b30;">Please enter your email address</span>';
+                return;
+            }
+
+            statusDiv.innerHTML = '<span style="color: #007aff;">Sending...</span>';
+
+            // TODO: Implement email sending endpoint
+            fetch('/api/send-links', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    email: email,
+                    viewUrl: viewUrl,
+                    editUrl: editUrl
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    statusDiv.innerHTML = '<span style="color: #34c759;">✓ Links sent to your email!</span>';
+                } else {
+                    statusDiv.innerHTML = '<span style="color: #ff3b30;">Failed to send email. Please save the links manually.</span>';
+                }
+            })
+            .catch(error => {
+                statusDiv.innerHTML = '<span style="color: #ff3b30;">Failed to send email. Please save the links manually.</span>';
+            });
+        }
+    </script>
+</body>
+</html>
