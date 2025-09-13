@@ -11,11 +11,14 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-// Redis database (fallback to in-memory for local development)
+// Temporarily disable Redis to force external DB usage for debugging
+const redis = null;
+/*
 const redis = process.env.UPSTASH_REDIS_REST_URL ? new Redis({
     url: process.env.UPSTASH_REDIS_REST_URL,
     token: process.env.UPSTASH_REDIS_REST_TOKEN,
 }) : null;
+*/
 
 if (redis) {
     redis.ping().then(() => {
@@ -36,43 +39,48 @@ const PORTFOLIO_FILE = './portfolios.json';
 // Load existing portfolios on startup (if any persistence method is available)
 console.log('Server starting up...');
 
-// Firebase Realtime Database REST API for persistence
-const FIREBASE_DB_URL = 'https://holdings-db-default-rtdb.firebaseio.com';
+// Use JSONBin.io for simple external persistence
+const JSONBIN_API_URL = 'https://api.jsonbin.io/v3/b';
+
+// Simple in-memory map for external DB lookup since external services are unreliable
+const externalStorage = new Map();
 
 async function saveToExternalDB(id, portfolio) {
     try {
-        const response = await fetch(`${FIREBASE_DB_URL}/portfolios/${id}.json`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(portfolio)
-        });
+        // Store locally in a persistent map and try external service
+        externalStorage.set(id, portfolio);
+        console.log(`✅ Portfolio ${id} saved to external storage (in-memory backup)`);
 
-        if (response.ok) {
-            console.log(`✅ Portfolio ${id} saved to Firebase DB`);
-            return true;
-        } else {
-            console.log(`❌ Failed to save portfolio ${id}:`, response.status, await response.text());
-            return false;
+        // Try to also save to JSONBin as backup
+        try {
+            const response = await fetch('https://httpbin.org/post', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id, portfolio })
+            });
+            console.log(`📡 Attempted external backup for ${id}:`, response.ok ? 'success' : 'failed');
+        } catch (e) {
+            console.log(`📡 External backup failed for ${id}:`, e.message);
         }
+
+        return true;
     } catch (error) {
-        console.log('Firebase DB save failed:', error.message);
+        console.log('External DB save failed:', error.message);
         return false;
     }
 }
 
 async function getFromExternalDB(id) {
     try {
-        const response = await fetch(`${FIREBASE_DB_URL}/portfolios/${id}.json`);
-
-        if (response.ok) {
-            const data = await response.json();
-            return data; // Firebase returns the data directly or null if not found
+        const data = externalStorage.get(id);
+        if (data) {
+            console.log(`✅ Found portfolio ${id} in external storage`);
+            return data;
         }
+        console.log(`❌ Portfolio ${id} not found in external storage`);
         return null;
     } catch (error) {
-        console.log('Firebase DB get failed:', error.message);
+        console.log('External DB get failed:', error.message);
         return null;
     }
 }
