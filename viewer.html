@@ -318,21 +318,45 @@
 
         function updateHoldingsTable(holdings) {
             const tbody = document.getElementById('holdingsTable');
-            tbody.innerHTML = holdings.map(holding => {
+            const rows = [];
+
+            // Add actual holdings
+            holdings.forEach(holding => {
                 const dailyChange = holding.shares * holding.dailyChange;
-                return `
+                rows.push(`
                     <tr>
                         <td style="font-weight: 600;">${holding.ticker}</td>
                         <td style="text-align: right; font-weight: 500;">$${holding.currentPrice.toFixed(2)}</td>
                         <td style="text-align: right; font-weight: 500;" class="${holding.dailyChange >= 0 ? 'positive' : 'negative'}">${holding.dailyChange >= 0 ? '+' : ''}$${holding.dailyChange.toFixed(2)}</td>
                         <td style="text-align: right; font-weight: 600;" class="${dailyChange >= 0 ? 'positive' : 'negative'}">$${Math.abs(dailyChange).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
                     </tr>
-                `;
-            }).join('');
+                `);
+            });
+
+            // Fill remaining slots with empty rows to always have 10 rows
+            while (rows.length < 10) {
+                rows.push(`
+                    <tr>
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
+                    </tr>
+                `);
+            }
+
+            tbody.innerHTML = rows.join('');
         }
 
         function updatePagination() {
             const dotsEl = document.getElementById('paginationDots');
+            const prevBtn = document.getElementById('prevArrow');
+            const nextBtn = document.getElementById('nextArrow');
+
+            // Update arrow states
+            prevBtn.disabled = currentPage === 0;
+            nextBtn.disabled = currentPage === pages.length - 1;
+
             dotsEl.innerHTML = pages.map((page, index) => {
                 const activeClass = index === currentPage ? 'active' : '';
                 const homeClass = page.pageNumber === 0 ? 'home' : '';
@@ -343,6 +367,20 @@
         function goToPage(pageIndex) {
             currentPage = pageIndex;
             updateDisplay();
+        }
+
+        function previousPage() {
+            if (currentPage > 0) {
+                currentPage--;
+                updateDisplay();
+            }
+        }
+
+        function nextPage() {
+            if (currentPage < pages.length - 1) {
+                currentPage++;
+                updateDisplay();
+            }
         }
 
 
@@ -364,14 +402,8 @@
 
         // Keyboard navigation
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'ArrowLeft' && currentPage > 0) {
-                currentPage--;
-                updateDisplay();
-            }
-            if (e.key === 'ArrowRight' && currentPage < pages.length - 1) {
-                currentPage++;
-                updateDisplay();
-            }
+            if (e.key === 'ArrowLeft') previousPage();
+            if (e.key === 'ArrowRight') nextPage();
         });
 
         // Touch navigation
@@ -383,13 +415,8 @@
             const touchEndX = e.changedTouches[0].screenX;
             const diff = touchStartX - touchEndX;
             if (Math.abs(diff) > 50) {
-                if (diff > 0 && currentPage < pages.length - 1) {
-                    currentPage++;
-                    updateDisplay();
-                } else if (diff < 0 && currentPage > 0) {
-                    currentPage--;
-                    updateDisplay();
-                }
+                if (diff > 0) nextPage();
+                else previousPage();
             }
         });
 
