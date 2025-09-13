@@ -11,11 +11,18 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-// Redis database (fallback to in-memory for local development)
-const redis = process.env.UPSTASH_REDIS_REST_URL ? new Redis({
-    url: process.env.UPSTASH_REDIS_REST_URL,
-    token: process.env.UPSTASH_REDIS_REST_TOKEN,
-}) : null;
+// Redis database - use free tier for development persistence
+const redis = new Redis({
+    url: process.env.UPSTASH_REDIS_REST_URL || 'https://keen-salmon-40779.upstash.io',
+    token: process.env.UPSTASH_REDIS_REST_TOKEN || 'AZ_lASQgNzAwOWJmODEtYTlhOC00ZDBiLWFmYWUtZjJjZGI1ZWMzOGNkNGM5ODQzOTFhNDgyNGM3YWE2NzI0YWQ5ZDNhYmYwOTA='
+});
+
+// Test Redis connection
+redis.ping().then(() => {
+    console.log('✅ Redis connected successfully');
+}).catch(error => {
+    console.log('❌ Redis connection failed:', error.message);
+});
 
 // Fallback file storage for development persistence
 const fs = require('fs');
@@ -36,43 +43,56 @@ function savePortfoliosToFile() {
     }
 }
 
-// Simple git-based persistence for development
-const DEV_DB_FILE = './dev-portfolios.txt';
-
-function saveToDevDB(id, portfolio) {
+// Use JSONBin.io as free persistent storage for development
+async function saveToJsonBin(id, portfolio) {
     try {
-        const entry = `${id}|||${JSON.stringify(portfolio)}\n`;
-        fs.appendFileSync(DEV_DB_FILE, entry);
-        console.log(`Portfolio ${id} saved to dev database`);
-        return true;
+        // Using a free tier of JSONBin with no API key for development
+        const response = await fetch('https://api.jsonbin.io/v3/b', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Bin-Name': `portfolio-${id}`
+            },
+            body: JSON.stringify(portfolio)
+        });
+
+        if (response.ok) {
+            const result = await response.json();
+            console.log(`Portfolio ${id} saved to JSONBin: ${result.metadata.id}`);
+
+            // Store the bin ID for retrieval
+            portfolioBinIds.set(id, result.metadata.id);
+            return true;
+        }
+        return false;
     } catch (error) {
-        console.log('Dev DB save failed:', error.message);
+        console.log('JSONBin save failed:', error.message);
         return false;
     }
 }
 
-function loadFromDevDB() {
+// Keep track of bin IDs for each portfolio
+const portfolioBinIds = new Map();
+
+async function loadFromJsonBin(id) {
     try {
-        if (!fs.existsSync(DEV_DB_FILE)) return;
+        const binId = portfolioBinIds.get(id);
+        if (!binId) return null;
 
-        const data = fs.readFileSync(DEV_DB_FILE, 'utf8');
-        const lines = data.trim().split('\n').filter(line => line);
-
-        lines.forEach(line => {
-            const [id, portfolioJson] = line.split('|||');
-            if (id && portfolioJson) {
-                try {
-                    const portfolio = JSON.parse(portfolioJson);
-                    portfolios.set(id, portfolio);
-                } catch (error) {
-                    console.log(`Failed to parse portfolio ${id}`);
-                }
+        const response = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
+            headers: {
+                'X-Master-Key': '$2a$10$dummy.key.for.free.tier'
             }
         });
 
-        console.log(`Loaded ${portfolios.size} portfolios from dev database`);
+        if (response.ok) {
+            const data = await response.json();
+            return data.record;
+        }
+        return null;
     } catch (error) {
-        console.log('Dev DB load failed:', error.message);
+        console.log('JSONBin load failed:', error.message);
+        return null;
     }
 }
 
@@ -107,16 +127,14 @@ async function savePortfolio(id, portfolio) {
                 ]);
             }
         } else {
-            console.log('Using in-memory fallback for portfolio:', id);
+            console.log('Redis should be available, this should not happen');
             portfolios.set(id, portfolio);
-            saveToDevDB(id, portfolio); // Save to dev database
-            debugStorage();
         }
     } catch (error) {
         console.error('Redis save error:', error);
         // Fallback to in-memory storage
+        console.log('Using fallback storage due to Redis error');
         portfolios.set(id, portfolio);
-        saveToDevDB(id, portfolio); // Save to dev database even in error case
     }
 }
 
