@@ -30,55 +30,66 @@ if (redis) {
 // Fallback file storage for development persistence
 const fs = require('fs');
 const portfolios = new Map();
+const portfolioBinMap = new Map(); // Maps portfolio ID to bin ID
 const PORTFOLIO_FILE = './portfolios.json';
 
 // Load existing portfolios on startup (if any persistence method is available)
 console.log('Server starting up...');
 
-// Reliable external database using simple REST API
-const DB_BASE_URL = 'https://jsonbox.io/box_holdings_db';
+// Simple file-based persistence
+const PORTFOLIO_DB_FILE = './dev-portfolios.txt';
 
 async function saveToExternalDB(id, portfolio) {
     try {
-        // Use jsonbox.io - simple REST API, no auth needed
-        const response = await fetch(`${DB_BASE_URL}/${id}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                id: id,
-                data: portfolio,
-                timestamp: Date.now()
-            })
-        });
+        // Write to file in a simple format: id|||json_data
+        const entry = `${id}|||${JSON.stringify(portfolio)}\n`;
 
-        if (response.ok) {
-            console.log(`✅ Portfolio ${id} saved to reliable DB`);
-            return true;
+        if (fs.existsSync(PORTFOLIO_DB_FILE)) {
+            // Read existing file to check if ID already exists
+            const content = fs.readFileSync(PORTFOLIO_DB_FILE, 'utf8');
+            const lines = content.split('\n').filter(line => line.trim());
+            const existingIndex = lines.findIndex(line => line.startsWith(id + '|||'));
+
+            if (existingIndex >= 0) {
+                // Replace existing entry
+                lines[existingIndex] = entry.trim();
+                fs.writeFileSync(PORTFOLIO_DB_FILE, lines.join('\n') + '\n');
+            } else {
+                // Append new entry
+                fs.appendFileSync(PORTFOLIO_DB_FILE, entry);
+            }
         } else {
-            console.log(`❌ Failed to save portfolio ${id}:`, response.status, await response.text());
-            return false;
+            // Create new file
+            fs.writeFileSync(PORTFOLIO_DB_FILE, entry);
         }
+
+        console.log(`✅ Portfolio ${id} saved to file DB`);
+        return true;
     } catch (error) {
-        console.log('External DB save failed:', error.message);
+        console.log('File DB save failed:', error.message);
         return false;
     }
 }
 
 async function getFromExternalDB(id) {
     try {
-        const response = await fetch(`${DB_BASE_URL}?q=id:${id}&limit=1`);
+        if (!fs.existsSync(PORTFOLIO_DB_FILE)) {
+            return null;
+        }
 
-        if (response.ok) {
-            const results = await response.json();
-            if (results && results.length > 0) {
-                return results[0].data;
+        const content = fs.readFileSync(PORTFOLIO_DB_FILE, 'utf8');
+        const lines = content.split('\n').filter(line => line.trim());
+
+        for (const line of lines) {
+            if (line.startsWith(id + '|||')) {
+                const jsonData = line.substring(id.length + 3); // Remove "id|||"
+                return JSON.parse(jsonData);
             }
         }
+
         return null;
     } catch (error) {
-        console.log('External DB get failed:', error.message);
+        console.log('File DB get failed:', error.message);
         return null;
     }
 }
