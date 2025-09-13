@@ -424,6 +424,57 @@ app.get('/p/:id', (req, res) => {
     res.sendFile(path.join(__dirname, 'viewer.html'));
 });
 
+// Ticker validation endpoint
+app.get('/api/validate-ticker/:ticker', async (req, res) => {
+    try {
+        const ticker = req.params.ticker.toUpperCase().trim();
+
+        if (!ticker) {
+            return res.json({ valid: false, error: 'Empty ticker' });
+        }
+
+        // Crypto translation layer
+        const cryptoMap = {
+            'BTC': 'BTC-USD',
+            'ETH': 'ETH-USD',
+            'USDT': 'USDT-USD',
+            'BNB': 'BNB-USD',
+            'XRP': 'XRP-USD',
+            'DOGE': 'DOGE-USD',
+            'ADA': 'ADA-USD',
+            'SOL': 'SOL-USD',
+            'DOT': 'DOT-USD',
+            'MATIC': 'MATIC-USD'
+        };
+
+        // Check if it's a crypto and translate
+        const actualTicker = cryptoMap[ticker] || ticker;
+
+        // Validate by trying to fetch price from Yahoo Finance
+        const response = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${actualTicker}`, {
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36'
+            }
+        });
+
+        const data = await response.json();
+
+        if (data.chart && data.chart.result && data.chart.result[0] && data.chart.result[0].meta.regularMarketPrice) {
+            res.json({
+                valid: true,
+                ticker: ticker,
+                actualTicker: actualTicker,
+                price: data.chart.result[0].meta.regularMarketPrice
+            });
+        } else {
+            res.json({ valid: false, error: 'Ticker not found' });
+        }
+    } catch (error) {
+        console.error('Ticker validation error:', error);
+        res.json({ valid: false, error: 'Validation failed' });
+    }
+});
+
 // Serve edit page
 app.get('/edit/:id/:secret', (req, res) => {
     res.sendFile(path.join(__dirname, 'creator.html'));

@@ -59,6 +59,9 @@
         .cell-input { width: 100%; border: none; background: transparent; padding: 6px; font-size: 14px; outline: none; text-align: center; color: inherit; }
         .cell-input:first-child { text-align: left; }
         .cell-input:focus { background: white; border: 2px solid #667eea; border-radius: 4px; }
+        .cell-input.valid { background: white; border: 2px solid #34c759; border-radius: 4px; }
+        .cell-input.invalid { background: white; border: 2px solid #ff3b30; border-radius: 4px; }
+        .cell-input.validating { background: white; border: 2px solid #007aff; border-radius: 4px; }
         @media (prefers-color-scheme: dark) { .cell-input:focus { background: #2a2a2a; color: #f9fafb; } }
         
         .category-dot { width: 24px; height: 24px; border-radius: 50%; border: 2px solid #e5e7eb; cursor: pointer; }
@@ -219,7 +222,7 @@
             const placeholderTicker = data.ticker ? '' : alphabetTickers[holdingsCount % 26];
             
             row.innerHTML = `
-                <div class="spreadsheet-cell"><input class="cell-input" placeholder="${placeholderTicker}" value="${data.ticker || ''}" style="text-align: left;"></div>
+                <div class="spreadsheet-cell"><input class="cell-input ticker-input" placeholder="${placeholderTicker}" value="${data.ticker || ''}" style="text-align: left;"></div>
                 <div class="spreadsheet-cell"><input class="cell-input" type="number" placeholder="100" value="${data.shares || ''}" style="text-align: center;"></div>
                 <div class="spreadsheet-cell" style="position:relative; justify-content: center;">
                     <div class="category-dot ${data.group ? groupColors[data.group] || 'color-none' : 'color-none'}" onclick="this.nextElementSibling.click()"></div>
@@ -232,6 +235,10 @@
             `;
             container.appendChild(row);
             holdingsCount++;
+
+            // Add validation to ticker input
+            const tickerInput = row.querySelector('.ticker-input');
+            setupTickerValidation(tickerInput);
         }
 
         function updateCategoryDot(select) {
@@ -247,6 +254,12 @@
         }
 
         async function createPortfolio() {
+            // Check if all tickers are valid before proceeding
+            if (!areAllTickersValid()) {
+                alert('Please fix invalid tickers (red borders) before creating your portfolio');
+                return;
+            }
+
             // Collect holdings data
             const holdings = [];
             document.querySelectorAll('.spreadsheet-row').forEach(row => {
@@ -254,7 +267,7 @@
                 const ticker = inputs[0].value.trim();
                 const quantity = inputs[1].value;
                 const category = row.querySelector('.category-select').value;
-                
+
                 if (ticker) {
                     holdings.push({
                         ticker: ticker.toUpperCase(),
@@ -299,21 +312,90 @@
             }
         }
 
-        // Initialize with dummy data
+        // Initialize with empty rows (no prefilled data)
         function loadWithDummyData() {
-            const dummyData = [
-                {ticker: 'AAPL', shares: 50, group: 'Stocks'},
-                {ticker: 'BBBY', shares: 30, group: 'Stocks'},
-                {ticker: 'CRWD', shares: 15, group: 'Stocks'},
-                {ticker: 'DIS', shares: 25, group: 'Stocks'},
-                {ticker: 'ETSY', shares: 40, group: 'Stocks'}
-            ];
-            
-            dummyData.forEach(data => createRowWithData(data));
-            
-            for(let i = 0; i < 3; i++) {
+            // Create 8 empty rows for user input
+            for(let i = 0; i < 8; i++) {
                 createRowWithData();
             }
+        }
+
+        // Ticker validation functions
+        let validationTimeouts = new Map();
+
+        async function validateTicker(input, ticker) {
+            if (!ticker.trim()) {
+                input.classList.remove('valid', 'invalid', 'validating');
+                return;
+            }
+
+            input.classList.add('validating');
+            input.classList.remove('valid', 'invalid');
+
+            try {
+                const response = await fetch(`/api/validate-ticker/${encodeURIComponent(ticker)}`);
+                const result = await response.json();
+
+                // Remove validating state
+                input.classList.remove('validating');
+
+                if (result.valid) {
+                    input.classList.add('valid');
+                    input.classList.remove('invalid');
+                } else {
+                    input.classList.add('invalid');
+                    input.classList.remove('valid');
+                }
+            } catch (error) {
+                console.error('Validation error:', error);
+                input.classList.remove('validating');
+                input.classList.add('invalid');
+                input.classList.remove('valid');
+            }
+        }
+
+        function setupTickerValidation(input) {
+            input.addEventListener('input', (e) => {
+                const ticker = e.target.value.trim().toUpperCase();
+
+                // Clear previous timeout
+                if (validationTimeouts.has(input)) {
+                    clearTimeout(validationTimeouts.get(input));
+                }
+
+                // Debounce validation
+                const timeout = setTimeout(() => {
+                    validateTicker(input, ticker);
+                    validationTimeouts.delete(input);
+                }, 500);
+
+                validationTimeouts.set(input, timeout);
+            });
+
+            // Validate on blur as well
+            input.addEventListener('blur', () => {
+                const ticker = input.value.trim().toUpperCase();
+                if (ticker) {
+                    validateTicker(input, ticker);
+                }
+            });
+        }
+
+        function areAllTickersValid() {
+            const tickerInputs = document.querySelectorAll('.ticker-input');
+            let hasAnyTickers = false;
+
+            for (const input of tickerInputs) {
+                const ticker = input.value.trim();
+                if (ticker) {
+                    hasAnyTickers = true;
+                    if (!input.classList.contains('valid')) {
+                        return false;
+                    }
+                }
+            }
+
+            return hasAnyTickers; // Must have at least one ticker and all must be valid
         }
 
         // Initialize
@@ -401,6 +483,12 @@
         };
 
         async function updatePortfolio() {
+            // Check if all tickers are valid before proceeding
+            if (!areAllTickersValid()) {
+                alert('Please fix invalid tickers (red borders) before updating your portfolio');
+                return;
+            }
+
             const data = collectFormData();
             if (!data.holdings.length) {
                 alert('Please add at least one holding');
