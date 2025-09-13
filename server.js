@@ -22,19 +22,8 @@ const fs = require('fs');
 const portfolios = new Map();
 const PORTFOLIO_FILE = './portfolios.json';
 
-// Load existing portfolios from file on startup
-try {
-    if (fs.existsSync(PORTFOLIO_FILE)) {
-        const data = fs.readFileSync(PORTFOLIO_FILE, 'utf8');
-        const savedPortfolios = JSON.parse(data);
-        Object.entries(savedPortfolios).forEach(([id, portfolio]) => {
-            portfolios.set(id, portfolio);
-        });
-        console.log(`Loaded ${portfolios.size} portfolios from file`);
-    }
-} catch (error) {
-    console.log('No existing portfolios file found, starting fresh');
-}
+// Load existing portfolios from dev database on startup
+loadFromDevDB();
 
 // Save portfolios to file periodically
 function savePortfoliosToFile() {
@@ -47,11 +36,52 @@ function savePortfoliosToFile() {
     }
 }
 
+// Simple git-based persistence for development
+const DEV_DB_FILE = './dev-portfolios.txt';
+
+function saveToDevDB(id, portfolio) {
+    try {
+        const entry = `${id}|||${JSON.stringify(portfolio)}\n`;
+        fs.appendFileSync(DEV_DB_FILE, entry);
+        console.log(`Portfolio ${id} saved to dev database`);
+        return true;
+    } catch (error) {
+        console.log('Dev DB save failed:', error.message);
+        return false;
+    }
+}
+
+function loadFromDevDB() {
+    try {
+        if (!fs.existsSync(DEV_DB_FILE)) return;
+
+        const data = fs.readFileSync(DEV_DB_FILE, 'utf8');
+        const lines = data.trim().split('\n').filter(line => line);
+
+        lines.forEach(line => {
+            const [id, portfolioJson] = line.split('|||');
+            if (id && portfolioJson) {
+                try {
+                    const portfolio = JSON.parse(portfolioJson);
+                    portfolios.set(id, portfolio);
+                } catch (error) {
+                    console.log(`Failed to parse portfolio ${id}`);
+                }
+            }
+        });
+
+        console.log(`Loaded ${portfolios.size} portfolios from dev database`);
+    } catch (error) {
+        console.log('Dev DB load failed:', error.message);
+    }
+}
+
 // Debug logging to understand the persistence issue
 function debugStorage() {
     console.log('=== STORAGE DEBUG ===');
     console.log('Redis available:', !!redis);
     console.log('Redis URL set:', !!process.env.UPSTASH_REDIS_REST_URL);
+    console.log('GitHub token set:', !!process.env.GITHUB_TOKEN);
     console.log('In-memory portfolio count:', portfolios.size);
     console.log('File exists:', fs.existsSync(PORTFOLIO_FILE));
     console.log('Current working directory:', process.cwd());
@@ -79,14 +109,14 @@ async function savePortfolio(id, portfolio) {
         } else {
             console.log('Using in-memory fallback for portfolio:', id);
             portfolios.set(id, portfolio);
-            savePortfoliosToFile(); // Save to file when using fallback
+            saveToDevDB(id, portfolio); // Save to dev database
             debugStorage();
         }
     } catch (error) {
         console.error('Redis save error:', error);
         // Fallback to in-memory storage
         portfolios.set(id, portfolio);
-        savePortfoliosToFile(); // Save to file even in error case
+        saveToDevDB(id, portfolio); // Save to dev database even in error case
     }
 }
 
