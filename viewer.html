@@ -309,8 +309,9 @@
                 const dailyPercent = yesterdayValue > 0 ? (totalDailyChange / yesterdayValue) * 100 : 0;
                 const isPositive = totalDailyChange >= 0;
 
-                // Clear the total amount field
+                // Clear the total amount field and hide the separator
                 document.getElementById('categoryTotal').textContent = '';
+                document.querySelector('#categoryHeader .category-right span:nth-child(2)').style.display = 'none';
 
                 // Show OPPOSITE of what the total section is showing
                 const changeElement = document.getElementById('categoryChange');
@@ -326,7 +327,10 @@
             } else {
                 headerEl.className = `category-header page-positive color-${page.colorIndex}`;
                 containerEl.className = `holdings-container ${currentPage % 2 === 0 ? 'bg-white' : 'bg-gray'}`;
-                
+
+                // Show the separator for non-All Holdings pages
+                document.querySelector('#categoryHeader .category-right span:nth-child(2)').style.display = '';
+
                 let categoryTotal = 0;
                 let categoryDailyChange = 0;
                 page.holdings.forEach(holding => {
