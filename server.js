@@ -47,6 +47,17 @@ function savePortfoliosToFile() {
     }
 }
 
+// Debug logging to understand the persistence issue
+function debugStorage() {
+    console.log('=== STORAGE DEBUG ===');
+    console.log('Redis available:', !!redis);
+    console.log('Redis URL set:', !!process.env.UPSTASH_REDIS_REST_URL);
+    console.log('In-memory portfolio count:', portfolios.size);
+    console.log('File exists:', fs.existsSync(PORTFOLIO_FILE));
+    console.log('Current working directory:', process.cwd());
+    console.log('====================');
+}
+
 // Database helper functions
 async function savePortfolio(id, portfolio) {
     try {
@@ -66,8 +77,10 @@ async function savePortfolio(id, portfolio) {
                 ]);
             }
         } else {
+            console.log('Using in-memory fallback for portfolio:', id);
             portfolios.set(id, portfolio);
             savePortfoliosToFile(); // Save to file when using fallback
+            debugStorage();
         }
     } catch (error) {
         console.error('Redis save error:', error);
@@ -263,6 +276,7 @@ app.use(express.static('.'));
 
 app.listen(PORT, () => {
     console.log(`Server running at http://localhost:${PORT}`);
+    debugStorage();
 });
 
 // Export for Vercel
