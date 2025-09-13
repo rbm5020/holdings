@@ -34,7 +34,7 @@ const portfolioBinMap = new Map(); // Maps portfolio ID to bin ID
 const PORTFOLIO_FILE = './portfolios.json';
 
 // Load existing portfolios on startup (if any persistence method is available)
-console.log('Server starting up...');
+console.log('Server starting up with Supabase persistence...');
 
 // Production-ready Supabase persistence
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://demo.supabase.co';
