@@ -128,9 +128,11 @@ async function savePortfolio(id, portfolio) {
                 ]);
             }
         } else {
-            console.log('No Redis - trying external DB for portfolio:', id);
+            console.log('🔄 No Redis - trying external DB for portfolio:', id);
+            console.log('📝 Portfolio data:', JSON.stringify(portfolio).substring(0, 100) + '...');
             portfolios.set(id, portfolio);
-            await saveToExternalDB(id, portfolio);
+            const saved = await saveToExternalDB(id, portfolio);
+            console.log('💾 External DB save result:', saved);
         }
     } catch (error) {
         console.error('Redis save error:', error);
@@ -153,11 +155,16 @@ async function getPortfolio(id) {
             // Try in-memory first, then external DB
             let portfolio = portfolios.get(id);
             if (!portfolio) {
-                console.log('Not in memory, checking external DB for:', id);
+                console.log('🔍 Not in memory, checking external DB for:', id);
                 portfolio = await getFromExternalDB(id);
                 if (portfolio) {
+                    console.log('✅ Found in external DB:', id);
                     portfolios.set(id, portfolio); // Cache it
+                } else {
+                    console.log('❌ Not found in external DB:', id);
                 }
+            } else {
+                console.log('📋 Found in memory:', id);
             }
             return portfolio;
         }
