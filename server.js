@@ -24,10 +24,20 @@ const portfolios = new Map();
 async function savePortfolio(id, portfolio) {
     try {
         if (redis) {
-            await Promise.race([
-                redis.set(`portfolio:${id}`, JSON.stringify(portfolio)),
-                new Promise((_, reject) => setTimeout(() => reject(new Error('Redis timeout')), 5000))
-            ]);
+            if (portfolio.expiresAt) {
+                // Calculate TTL in seconds
+                const ttlSeconds = Math.ceil((new Date(portfolio.expiresAt) - new Date()) / 1000);
+                await Promise.race([
+                    redis.set(`portfolio:${id}`, JSON.stringify(portfolio), { ex: ttlSeconds }),
+                    new Promise((_, reject) => setTimeout(() => reject(new Error('Redis timeout')), 5000))
+                ]);
+            } else {
+                // No expiration for "Forever" portfolios
+                await Promise.race([
+                    redis.set(`portfolio:${id}`, JSON.stringify(portfolio)),
+                    new Promise((_, reject) => setTimeout(() => reject(new Error('Redis timeout')), 5000))
+                ]);
+            }
         } else {
             portfolios.set(id, portfolio);
         }
