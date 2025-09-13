@@ -59,13 +59,7 @@
         .holdings-table tr:hover { background: rgba(0,0,0,0.02); }
         @media (prefers-color-scheme: dark) { .holdings-table tr:hover { background: rgba(255,255,255,0.05); } }
         
-        .pagination-container { display: flex; justify-content: center; align-items: center; gap: 10px; margin-bottom: 6px; }
-        @media (max-width: 640px) { .pagination-container { margin-bottom: 4px; gap: 8px; } }
-        .nav-arrow { background: none; border: none; color: #6b7280; font-size: 16px; cursor: pointer; padding: 4px; border-radius: 50%; transition: all 0.2s; }
-        .nav-arrow:hover { background: rgba(0,0,0,0.1); color: #374151; }
-        .nav-arrow:disabled { opacity: 0.3; cursor: not-allowed; }
-        .nav-arrow:disabled:hover { background: none; }
-        .pagination-dots { display: flex; justify-content: center; gap: 8px; }
+        .pagination-dots { display: flex; justify-content: center; gap: 8px; margin-top: 15px; }
         .dot { width: 8px; height: 8px; border-radius: 50%; background: #d1d5db; cursor: pointer; transition: all 0.3s; }
         .dot.home { width: 12px; height: 8px; border-radius: 4px; background: #6b7280; }
         .dot.active { background: #1d4ed8; transform: scale(1.2); }
@@ -113,12 +107,6 @@
                 </div>
             </div>
 
-            <div class="pagination-container">
-                <button class="nav-arrow" id="prevArrow" onclick="previousPage()">←</button>
-                <div class="pagination-dots" id="paginationDots"></div>
-                <button class="nav-arrow" id="nextArrow" onclick="nextPage()">→</button>
-            </div>
-
             <div class="category-header page-zero" id="categoryHeader">
                 <div class="category-name" id="categoryName">All Holdings</div>
                 <div class="category-right">
@@ -141,6 +129,8 @@
                     <tbody id="holdingsTable"></tbody>
                 </table>
             </div>
+
+            <div class="pagination-dots" id="paginationDots"></div>
         </div>
     </div>
 
@@ -343,31 +333,10 @@
 
         function updatePagination() {
             const dotsEl = document.getElementById('paginationDots');
-            const prevBtn = document.getElementById('prevArrow');
-            const nextBtn = document.getElementById('nextArrow');
-            
-            // Update arrow states
-            prevBtn.disabled = currentPage === 0;
-            nextBtn.disabled = currentPage === pages.length - 1;
-            
-            // Show max 5 dots
-            const maxDots = 5;
-            let startIndex = 0;
-            let endIndex = Math.min(pages.length, maxDots);
-            
-            if (pages.length > maxDots) {
-                const center = Math.floor(maxDots / 2);
-                startIndex = Math.max(0, Math.min(currentPage - center, pages.length - maxDots));
-                endIndex = startIndex + maxDots;
-            }
-            
-            const visiblePages = pages.slice(startIndex, endIndex);
-            
-            dotsEl.innerHTML = visiblePages.map((page, index) => {
-                const actualIndex = startIndex + index;
-                const activeClass = actualIndex === currentPage ? 'active' : '';
+            dotsEl.innerHTML = pages.map((page, index) => {
+                const activeClass = index === currentPage ? 'active' : '';
                 const homeClass = page.pageNumber === 0 ? 'home' : '';
-                return `<div class="dot ${homeClass} ${activeClass}" onclick="goToPage(${actualIndex})"></div>`;
+                return `<div class="dot ${homeClass} ${activeClass}" onclick="goToPage(${index})"></div>`;
             }).join('');
         }
 
@@ -376,19 +345,6 @@
             updateDisplay();
         }
 
-        function previousPage() {
-            if (currentPage > 0) {
-                currentPage--;
-                updateDisplay();
-            }
-        }
-
-        function nextPage() {
-            if (currentPage < pages.length - 1) {
-                currentPage++;
-                updateDisplay();
-            }
-        }
 
         function toggleChangeDisplay() {
             showPercentage = !showPercentage;
@@ -408,8 +364,14 @@
 
         // Keyboard navigation
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'ArrowLeft') previousPage();
-            if (e.key === 'ArrowRight') nextPage();
+            if (e.key === 'ArrowLeft' && currentPage > 0) {
+                currentPage--;
+                updateDisplay();
+            }
+            if (e.key === 'ArrowRight' && currentPage < pages.length - 1) {
+                currentPage++;
+                updateDisplay();
+            }
         });
 
         // Touch navigation
@@ -421,8 +383,13 @@
             const touchEndX = e.changedTouches[0].screenX;
             const diff = touchStartX - touchEndX;
             if (Math.abs(diff) > 50) {
-                if (diff > 0) nextPage();
-                else previousPage();
+                if (diff > 0 && currentPage < pages.length - 1) {
+                    currentPage++;
+                    updateDisplay();
+                } else if (diff < 0 && currentPage > 0) {
+                    currentPage--;
+                    updateDisplay();
+                }
             }
         });
 
