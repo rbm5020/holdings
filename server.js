@@ -11,18 +11,21 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-// Redis database - use free tier for development persistence
-const redis = new Redis({
-    url: process.env.UPSTASH_REDIS_REST_URL || 'https://keen-salmon-40779.upstash.io',
-    token: process.env.UPSTASH_REDIS_REST_TOKEN || 'AZ_lASQgNzAwOWJmODEtYTlhOC00ZDBiLWFmYWUtZjJjZGI1ZWMzOGNkNGM5ODQzOTFhNDgyNGM3YWE2NzI0YWQ5ZDNhYmYwOTA='
-});
+// Redis database (fallback to in-memory for local development)
+const redis = process.env.UPSTASH_REDIS_REST_URL ? new Redis({
+    url: process.env.UPSTASH_REDIS_REST_URL,
+    token: process.env.UPSTASH_REDIS_REST_TOKEN,
+}) : null;
 
-// Test Redis connection
-redis.ping().then(() => {
-    console.log('✅ Redis connected successfully');
-}).catch(error => {
-    console.log('❌ Redis connection failed:', error.message);
-});
+if (redis) {
+    redis.ping().then(() => {
+        console.log('✅ Redis connected successfully');
+    }).catch(error => {
+        console.log('❌ Redis connection failed:', error.message);
+    });
+} else {
+    console.log('📝 No Redis configured - using in-memory storage for development');
+}
 
 // Fallback file storage for development persistence
 const fs = require('fs');
@@ -127,7 +130,7 @@ async function savePortfolio(id, portfolio) {
                 ]);
             }
         } else {
-            console.log('Redis should be available, this should not happen');
+            console.log('Using in-memory fallback for portfolio:', id);
             portfolios.set(id, portfolio);
         }
     } catch (error) {
