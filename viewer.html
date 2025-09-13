@@ -296,8 +296,32 @@
             if (page.type === 'all') {
                 headerEl.className = 'category-header page-zero';
                 containerEl.className = 'holdings-container bg-gray';
-                document.getElementById('categoryTotal').textContent = '';
-                document.getElementById('categoryChange').textContent = '';
+
+                // Calculate total values for All Holdings
+                let totalValue = 0;
+                let totalDailyChange = 0;
+                allHoldings.forEach(holding => {
+                    totalValue += holding.shares * holding.currentPrice;
+                    totalDailyChange += holding.shares * holding.dailyChange;
+                });
+
+                const yesterdayValue = totalValue - totalDailyChange;
+                const dailyPercent = yesterdayValue > 0 ? (totalDailyChange / yesterdayValue) * 100 : 0;
+                const isPositive = totalDailyChange >= 0;
+
+                document.getElementById('categoryTotal').textContent = `$${totalValue.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+
+                // Show OPPOSITE of what the total section is showing
+                const changeElement = document.getElementById('categoryChange');
+                changeElement.className = isPositive ? 'positive' : 'negative';
+
+                if (showPercentage) {
+                    // Total is showing percentage, so show dollar amount
+                    changeElement.textContent = `${isPositive ? '+' : ''}$${Math.abs(totalDailyChange).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                } else {
+                    // Total is showing dollar amount, so show percentage
+                    changeElement.textContent = `${isPositive ? '+' : ''}${Math.abs(dailyPercent).toFixed(2)}%`;
+                }
             } else {
                 headerEl.className = `category-header page-positive color-${page.colorIndex}`;
                 containerEl.className = `holdings-container ${currentPage % 2 === 0 ? 'bg-white' : 'bg-gray'}`;
