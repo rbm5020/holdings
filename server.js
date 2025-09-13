@@ -35,7 +35,67 @@ const PORTFOLIO_FILE = './portfolios.json';
 // Load existing portfolios on startup (if any persistence method is available)
 console.log('Server starting up...');
 
-// Simple in-memory storage for development
+// Simple external database for development persistence
+const JSONBIN_API_KEY = process.env.JSONBIN_API_KEY || '$2a$10$N.kmcqw5M8lCHkOjFXHV9.TJvTfPOiW8HvQzOKQYqzT5y1NoCFD6u';
+const JSONBIN_BIN_ID = process.env.JSONBIN_BIN_ID || '678e5b61ad19ca34f8dc632a';
+
+async function saveToExternalDB(id, portfolio) {
+    try {
+        // Get existing data
+        const existing = await loadFromExternalDB();
+        existing[id] = portfolio;
+
+        // Save back to JSONBin
+        const response = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Master-Key': JSONBIN_API_KEY
+            },
+            body: JSON.stringify(existing)
+        });
+
+        if (response.ok) {
+            console.log(`✅ Portfolio ${id} saved to external DB`);
+            return true;
+        } else {
+            console.log(`❌ Failed to save portfolio ${id}:`, response.status);
+            return false;
+        }
+    } catch (error) {
+        console.log('External DB save failed:', error.message);
+        return false;
+    }
+}
+
+async function loadFromExternalDB() {
+    try {
+        const response = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, {
+            headers: {
+                'X-Master-Key': JSONBIN_API_KEY
+            }
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            return data.record || {};
+        }
+        return {};
+    } catch (error) {
+        console.log('External DB load failed:', error.message);
+        return {};
+    }
+}
+
+async function getFromExternalDB(id) {
+    try {
+        const data = await loadFromExternalDB();
+        return data[id] || null;
+    } catch (error) {
+        console.log('External DB get failed:', error.message);
+        return null;
+    }
+}
 
 // Debug logging to understand the persistence issue
 function debugStorage() {
@@ -68,14 +128,16 @@ async function savePortfolio(id, portfolio) {
                 ]);
             }
         } else {
-            console.log('Using in-memory fallback for portfolio:', id);
+            console.log('No Redis - trying external DB for portfolio:', id);
             portfolios.set(id, portfolio);
+            await saveToExternalDB(id, portfolio);
         }
     } catch (error) {
         console.error('Redis save error:', error);
-        // Fallback to in-memory storage
-        console.log('Using fallback storage due to Redis error');
+        // Fallback to external DB
+        console.log('Using external DB fallback due to Redis error');
         portfolios.set(id, portfolio);
+        await saveToExternalDB(id, portfolio);
     }
 }
 
@@ -88,12 +150,28 @@ async function getPortfolio(id) {
             ]);
             return data ? JSON.parse(data) : null;
         } else {
-            return portfolios.get(id) || null;
+            // Try in-memory first, then external DB
+            let portfolio = portfolios.get(id);
+            if (!portfolio) {
+                console.log('Not in memory, checking external DB for:', id);
+                portfolio = await getFromExternalDB(id);
+                if (portfolio) {
+                    portfolios.set(id, portfolio); // Cache it
+                }
+            }
+            return portfolio;
         }
     } catch (error) {
         console.error('Redis get error:', error);
-        // Fallback to in-memory storage
-        return portfolios.get(id) || null;
+        // Fallback to external DB
+        let portfolio = portfolios.get(id);
+        if (!portfolio) {
+            portfolio = await getFromExternalDB(id);
+            if (portfolio) {
+                portfolios.set(id, portfolio);
+            }
+        }
+        return portfolio;
     }
 }
 
