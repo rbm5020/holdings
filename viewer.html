@@ -9,8 +9,10 @@
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f7; color: #333; line-height: 1.6; }
         @media (prefers-color-scheme: dark) { body { background: #1a1a1a; color: #e5e5e7; } }
         .container { max-width: 800px; margin: 0 auto; padding: 20px; }
+        @media (max-width: 640px) { .container { padding: 10px; } }
         
-        .branding { text-align: center; margin-bottom: 32px; padding: 20px 0; border-bottom: 1px solid #e2e8f0; }
+        .branding { text-align: center; margin-bottom: 20px; padding: 15px 0; border-bottom: 1px solid #e2e8f0; }
+        @media (max-width: 640px) { .branding { margin-bottom: 15px; padding: 10px 0; } }
         @media (prefers-color-scheme: dark) { .branding { border-bottom-color: #374151; } }
         .logo-container { display: inline-flex; align-items: center; justify-content: center; background: rgba(15, 23, 42, 0.04); padding: 16px 24px; border-radius: 16px; margin-bottom: 16px; border: 1px solid rgba(15, 23, 42, 0.08); }
         @media (prefers-color-scheme: dark) { .logo-container { background: rgba(59, 130, 246, 0.1); border-color: rgba(59, 130, 246, 0.2); } }
@@ -24,7 +26,8 @@
         .tagline { font-size: 0.875rem; color: #64748b; font-weight: 500; letter-spacing: 0.025em; margin-bottom: 12px; }
         @media (prefers-color-scheme: dark) { .tagline { color: #94a3b8; } }
         
-        .header { text-align: center; margin-bottom: 20px; background: white; padding: 12px 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: 1px solid #e5e7eb; }
+        .header { text-align: center; margin-bottom: 15px; background: white; padding: 10px 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: 1px solid #e5e7eb; }
+        @media (max-width: 640px) { .header { margin-bottom: 10px; padding: 8px 12px; } }
         @media (prefers-color-scheme: dark) { .header { background: #2a2a2a; border-color: #404040; } }
         .portfolio-label { font-size: 0.9rem; font-weight: 600; color: #6b7280; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
         .total-value { font-size: 2.8rem; font-weight: 800; color: #1f2937; line-height: 1; }
@@ -56,7 +59,8 @@
         .holdings-table tr:hover { background: rgba(0,0,0,0.02); }
         @media (prefers-color-scheme: dark) { .holdings-table tr:hover { background: rgba(255,255,255,0.05); } }
         
-        .pagination-container { display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: 15px; }
+        .pagination-container { display: flex; justify-content: center; align-items: center; gap: 15px; margin-bottom: 10px; }
+        @media (max-width: 640px) { .pagination-container { margin-bottom: 8px; gap: 10px; } }
         .nav-arrow { background: none; border: none; color: #6b7280; font-size: 20px; cursor: pointer; padding: 8px; border-radius: 50%; transition: all 0.2s; }
         .nav-arrow:hover { background: rgba(0,0,0,0.1); color: #374151; }
         .nav-arrow:disabled { opacity: 0.3; cursor: not-allowed; }
@@ -71,11 +75,13 @@
         .error { text-align: center; padding: 40px; color: #dc2626; background: #fef2f2; border-radius: 8px; margin: 20px 0; }
         @media (prefers-color-scheme: dark) { .error { background: #7f1d1d; color: #fecaca; } }
         
-        @media (max-width: 640px) { 
-            .container { padding: 15px; } 
-            .logo { font-size: 1.5rem; } 
-            .domain { font-size: 1.5rem; }
-            .logo-container { padding: 14px 20px; }
+        @media (max-width: 640px) {
+            .logo { font-size: 1.4rem; }
+            .domain { font-size: 1.4rem; }
+            .logo-container { padding: 12px 16px; }
+            .total-value { font-size: 2.2rem; }
+            .holdings-table { font-size: 13px; }
+            .holdings-table th, .holdings-table td { padding: 6px 8px; }
         }
     </style>
 </head>
@@ -113,7 +119,13 @@
                     <span id="categoryChange">0.0%</span>
                 </div>
             </div>
-            
+
+            <div class="pagination-container">
+                <button class="nav-arrow" id="prevArrow" onclick="previousPage()">←</button>
+                <div class="pagination-dots" id="paginationDots"></div>
+                <button class="nav-arrow" id="nextArrow" onclick="nextPage()">→</button>
+            </div>
+
             <div class="holdings-container bg-gray" id="holdingsContainer">
                 <table class="holdings-table">
                     <thead>
@@ -126,12 +138,6 @@
                     </thead>
                     <tbody id="holdingsTable"></tbody>
                 </table>
-            </div>
-
-            <div class="pagination-container">
-                <button class="nav-arrow" id="prevArrow" onclick="previousPage()">←</button>
-                <div class="pagination-dots" id="paginationDots"></div>
-                <button class="nav-arrow" id="nextArrow" onclick="nextPage()">→</button>
             </div>
         </div>
     </div>
