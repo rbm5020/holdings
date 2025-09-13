@@ -317,10 +317,10 @@
                 changeElement.className = isPositive ? 'positive' : 'negative';
 
                 if (showPercentage) {
-                    // Total is showing percentage, so show dollar amount
+                    // Total is showing percentage, so All Holdings shows dollar amount
                     changeElement.textContent = `${isPositive ? '+' : ''}$${Math.abs(totalDailyChange).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
                 } else {
-                    // Total is showing dollar amount, so show percentage
+                    // Total is showing dollar amount, so All Holdings shows percentage
                     changeElement.textContent = `${isPositive ? '+' : ''}${Math.abs(dailyPercent).toFixed(2)}%`;
                 }
             } else {
@@ -426,6 +426,7 @@
         function toggleChangeDisplay() {
             showPercentage = !showPercentage;
             updateTotalValue();
+            updateCurrentPage(); // Update All Holdings to show opposite value
         }
 
         function toggleCategoryDailyDisplay() {
