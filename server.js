@@ -17,8 +17,35 @@ const redis = process.env.UPSTASH_REDIS_REST_URL ? new Redis({
     token: process.env.UPSTASH_REDIS_REST_TOKEN,
 }) : null;
 
-// Fallback in-memory storage for local development
+// Fallback file storage for development persistence
+const fs = require('fs');
 const portfolios = new Map();
+const PORTFOLIO_FILE = './portfolios.json';
+
+// Load existing portfolios from file on startup
+try {
+    if (fs.existsSync(PORTFOLIO_FILE)) {
+        const data = fs.readFileSync(PORTFOLIO_FILE, 'utf8');
+        const savedPortfolios = JSON.parse(data);
+        Object.entries(savedPortfolios).forEach(([id, portfolio]) => {
+            portfolios.set(id, portfolio);
+        });
+        console.log(`Loaded ${portfolios.size} portfolios from file`);
+    }
+} catch (error) {
+    console.log('No existing portfolios file found, starting fresh');
+}
+
+// Save portfolios to file periodically
+function savePortfoliosToFile() {
+    try {
+        const portfolioObj = Object.fromEntries(portfolios);
+        fs.writeFileSync(PORTFOLIO_FILE, JSON.stringify(portfolioObj, null, 2));
+        console.log(`Saved ${portfolios.size} portfolios to file`);
+    } catch (error) {
+        console.error('Failed to save portfolios:', error);
+    }
+}
 
 // Database helper functions
 async function savePortfolio(id, portfolio) {
@@ -40,11 +67,13 @@ async function savePortfolio(id, portfolio) {
             }
         } else {
             portfolios.set(id, portfolio);
+            savePortfoliosToFile(); // Save to file when using fallback
         }
     } catch (error) {
         console.error('Redis save error:', error);
         // Fallback to in-memory storage
         portfolios.set(id, portfolio);
+        savePortfoliosToFile(); // Save to file even in error case
     }
 }
 
