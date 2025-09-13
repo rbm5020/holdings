@@ -11,14 +11,11 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-// Temporarily disable Redis to force external DB usage for debugging
-const redis = null;
-/*
+// Redis database (fallback to in-memory for local development)
 const redis = process.env.UPSTASH_REDIS_REST_URL ? new Redis({
     url: process.env.UPSTASH_REDIS_REST_URL,
     token: process.env.UPSTASH_REDIS_REST_TOKEN,
 }) : null;
-*/
 
 if (redis) {
     redis.ping().then(() => {
