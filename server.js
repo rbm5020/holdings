@@ -213,6 +213,11 @@ function generateId() {
     return Math.random().toString(36).substring(2, 9);
 }
 
+// Generate random edit secret (longer for security)
+function generateEditSecret() {
+    return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+}
+
 // Fetch stock prices from Yahoo Finance
 async function fetchStockPrices(tickers) {
     const prices = {};
@@ -271,9 +276,10 @@ app.post('/api/portfolios', async (req, res) => {
         const { holdings, categories, duration, email } = req.body;
         
         const id = generateId();
+        const editSecret = generateEditSecret();
         const now = new Date();
         let expiresAt = null;
-        
+
         if (duration !== 'Forever') {
             const durationMap = {
                 '1 Day': 1,
@@ -283,9 +289,10 @@ app.post('/api/portfolios', async (req, res) => {
             const days = durationMap[duration] || 0;
             expiresAt = new Date(now.getTime() + days * 24 * 60 * 60 * 1000);
         }
-        
+
         const portfolio = {
             id,
+            editSecret,
             holdings: holdings.filter(h => h.ticker && h.ticker.trim()),
             categories,
             duration,
@@ -296,10 +303,11 @@ app.post('/api/portfolios', async (req, res) => {
         
         await savePortfolio(id, portfolio);
         
-        res.json({ 
-            success: true, 
-            id, 
-            url: `https://holdings-ten.vercel.app/p/${id}` 
+        res.json({
+            success: true,
+            id,
+            viewUrl: `https://holdings-ten.vercel.app/p/${id}`,
+            editUrl: `https://holdings-ten.vercel.app/edit/${id}/${editSecret}`
         });
     } catch (error) {
         console.error('Portfolio creation error:', error);
@@ -344,9 +352,81 @@ app.get('/api/portfolios/:id', async (req, res) => {
     });
 });
 
+// Edit validation endpoint for magic links
+app.get('/api/edit/:id/:secret', async (req, res) => {
+    try {
+        const { id, secret } = req.params;
+        const portfolio = await getPortfolio(id);
+
+        if (!portfolio) {
+            return res.status(404).json({ error: 'Portfolio not found' });
+        }
+
+        if (portfolio.editSecret !== secret) {
+            return res.status(403).json({ error: 'Invalid edit secret' });
+        }
+
+        // Valid magic link - return portfolio data for editing
+        res.json({
+            success: true,
+            portfolio: portfolio
+        });
+    } catch (error) {
+        console.error('Edit validation error:', error);
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
+// Update existing portfolio endpoint
+app.put('/api/portfolios/:id/:secret', async (req, res) => {
+    try {
+        const { id, secret } = req.params;
+        const { holdings, categories, duration } = req.body;
+
+        // Verify edit secret
+        const existingPortfolio = await getPortfolio(id);
+        if (!existingPortfolio) {
+            return res.status(404).json({ error: 'Portfolio not found' });
+        }
+
+        if (existingPortfolio.editSecret !== secret) {
+            return res.status(403).json({ error: 'Invalid edit secret' });
+        }
+
+        // Update portfolio with new data, keeping original creation info
+        const updatedPortfolio = {
+            ...existingPortfolio,
+            holdings: holdings.filter(h => h.ticker && h.ticker.trim()),
+            categories,
+            duration,
+            updatedAt: new Date()
+        };
+
+        await savePortfolio(id, updatedPortfolio);
+
+        res.json({
+            success: true,
+            id,
+            viewUrl: `https://holdings-ten.vercel.app/p/${id}`,
+            editUrl: `https://holdings-ten.vercel.app/edit/${id}/${secret}`
+        });
+    } catch (error) {
+        console.error('Portfolio update error:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to update portfolio'
+        });
+    }
+});
+
 // Serve portfolio viewer
 app.get('/p/:id', (req, res) => {
     res.sendFile(path.join(__dirname, 'viewer.html'));
+});
+
+// Serve edit page
+app.get('/edit/:id/:secret', (req, res) => {
+    res.sendFile(path.join(__dirname, 'creator.html'));
 });
 
 // Serve creator
