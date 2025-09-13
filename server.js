@@ -36,48 +36,72 @@ const PORTFOLIO_FILE = './portfolios.json';
 // Load existing portfolios on startup (if any persistence method is available)
 console.log('Server starting up...');
 
-// Use JSONBin.io for simple external persistence
-const JSONBIN_API_URL = 'https://api.jsonbin.io/v3/b';
-
-// Simple in-memory map for external DB lookup since external services are unreliable
-const externalStorage = new Map();
+// Production-ready Supabase persistence
+const SUPABASE_URL = process.env.SUPABASE_URL || 'https://demo.supabase.co';
+const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || 'demo-key';
 
 async function saveToExternalDB(id, portfolio) {
     try {
-        // Store locally in a persistent map and try external service
-        externalStorage.set(id, portfolio);
-        console.log(`✅ Portfolio ${id} saved to external storage (in-memory backup)`);
-
-        // Try to also save to JSONBin as backup
-        try {
-            const response = await fetch('https://httpbin.org/post', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id, portfolio })
-            });
-            console.log(`📡 Attempted external backup for ${id}:`, response.ok ? 'success' : 'failed');
-        } catch (e) {
-            console.log(`📡 External backup failed for ${id}:`, e.message);
+        if (!process.env.SUPABASE_URL) {
+            console.log(`⚠️ No SUPABASE_URL configured - portfolio ${id} saved to memory only`);
+            return true;
         }
 
-        return true;
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/portfolios`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'apikey': SUPABASE_ANON_KEY,
+                'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                'Prefer': 'return=minimal'
+            },
+            body: JSON.stringify({
+                id: id,
+                data: portfolio,
+                created_at: new Date().toISOString()
+            })
+        });
+
+        if (response.ok) {
+            console.log(`✅ Portfolio ${id} saved to Supabase`);
+            return true;
+        } else {
+            const error = await response.text();
+            console.log(`❌ Supabase save failed for ${id}:`, response.status, error);
+            return false;
+        }
     } catch (error) {
-        console.log('External DB save failed:', error.message);
+        console.log(`❌ Supabase save error for ${id}:`, error.message);
         return false;
     }
 }
 
 async function getFromExternalDB(id) {
     try {
-        const data = externalStorage.get(id);
-        if (data) {
-            console.log(`✅ Found portfolio ${id} in external storage`);
-            return data;
+        if (!process.env.SUPABASE_URL) {
+            console.log(`⚠️ No SUPABASE_URL configured - cannot retrieve portfolio ${id}`);
+            return null;
         }
-        console.log(`❌ Portfolio ${id} not found in external storage`);
+
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/portfolios?id=eq.${id}&select=data`, {
+            headers: {
+                'apikey': SUPABASE_ANON_KEY,
+                'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+            }
+        });
+
+        if (response.ok) {
+            const results = await response.json();
+            if (results && results.length > 0) {
+                console.log(`✅ Found portfolio ${id} in Supabase`);
+                return results[0].data;
+            }
+        }
+
+        console.log(`❌ Portfolio ${id} not found in Supabase`);
         return null;
     } catch (error) {
-        console.log('External DB get failed:', error.message);
+        console.log(`❌ Supabase get error for ${id}:`, error.message);
         return null;
     }
 }
