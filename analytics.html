@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Holdings.me - Analytics</title>
+
+    <!-- Favicon and Home Screen Icons -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/android-chrome-192x192.png">
+    <link rel="manifest" href="/site.webmanifest">
+    <meta name="theme-color" content="#007aff">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f7; color: #333; line-height: 1.6; }
+        @media (prefers-color-scheme: dark) { body { background: #1a1a1a; color: #e5e5e7; } }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+
+        .branding { text-align: center; margin-bottom: 30px; padding: 15px 0; border-bottom: 1px solid #e2e8f0; }
+        @media (prefers-color-scheme: dark) { .branding { border-bottom-color: #374151; } }
+        .logo-container { display: inline-flex; align-items: center; justify-content: center; background: rgba(15, 23, 42, 0.04); padding: 16px 24px; border-radius: 16px; margin-bottom: 10px; border: 1px solid rgba(15, 23, 42, 0.08); }
+        @media (prefers-color-scheme: dark) { .logo-container { background: rgba(59, 130, 246, 0.1); border-color: rgba(59, 130, 246, 0.2); } }
+        .logo-icon { width: 32px; height: 32px; background: linear-gradient(135deg, #1e40af 0%, #3730a3 100%); border-radius: 50%; margin-right: 12px; position: relative; }
+        .logo-icon::before { content: ''; position: absolute; width: 16px; height: 3px; background: white; border-radius: 1px; top: 8px; left: 50%; transform: translateX(-50%); }
+        .logo-icon::after { content: ''; position: absolute; width: 12px; height: 3px; background: rgba(255,255,255,0.7); border-radius: 1px; top: 15px; left: 50%; transform: translateX(-50%); }
+        .chart-line { position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); width: 8px; height: 3px; background: rgba(255,255,255,0.4); border-radius: 1px; }
+        .logo { font-size: 1.75rem; font-weight: 800; color: #0f172a; letter-spacing: -0.5px; }
+        .domain { font-size: 1.75rem; font-weight: 400; color: #64748b; letter-spacing: -0.5px; }
+        @media (prefers-color-scheme: dark) { .logo { color: #f8fafc; } }
+        .tagline { font-size: 0.875rem; color: #64748b; font-weight: 500; letter-spacing: 0.025em; margin-bottom: 8px; }
+        @media (prefers-color-scheme: dark) { .tagline { color: #94a3b8; } }
+        .admin-badge { display: inline-block; background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); color: white; padding: 4px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; margin-left: 10px; }
+
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-bottom: 30px; }
+
+        .stat-card { background: white; border-radius: 12px; padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #e5e7eb; }
+        @media (prefers-color-scheme: dark) { .stat-card { background: #2a2a2a; border-color: #404040; } }
+
+        .stat-header { display: flex; justify-content: between; align-items: center; margin-bottom: 16px; }
+        .stat-title { font-size: 1.1rem; font-weight: 600; color: #374151; margin-bottom: 8px; }
+        @media (prefers-color-scheme: dark) { .stat-title { color: #f3f4f6; } }
+        .stat-period { font-size: 0.875rem; color: #6b7280; }
+        @media (prefers-color-scheme: dark) { .stat-period { color: #9ca3af; } }
+
+        .stat-value { font-size: 2.5rem; font-weight: 800; color: #1f2937; margin-bottom: 8px; }
+        @media (prefers-color-scheme: dark) { .stat-value { color: #f9fafb; } }
+        .stat-change { display: flex; align-items: center; gap: 6px; font-size: 0.875rem; font-weight: 500; }
+        .stat-change.positive { color: #059669; }
+        .stat-change.negative { color: #dc2626; }
+        .stat-change.neutral { color: #6b7280; }
+
+        .chart-section { background: white; border-radius: 12px; padding: 24px; margin-bottom: 30px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #e5e7eb; }
+        @media (prefers-color-scheme: dark) { .chart-section { background: #2a2a2a; border-color: #404040; } }
+
+        .section-title { font-size: 1.25rem; font-weight: 700; color: #1f2937; margin-bottom: 20px; }
+        @media (prefers-color-scheme: dark) { .section-title { color: #f3f4f6; } }
+
+        .ticker-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; }
+        .ticker-item { background: #f8f9fa; border-radius: 8px; padding: 12px; text-align: center; border: 1px solid #e9ecef; }
+        @media (prefers-color-scheme: dark) { .ticker-item { background: #3a3a3a; border-color: #4a4a4a; } }
+        .ticker-symbol { font-weight: 700; color: #1f2937; margin-bottom: 4px; }
+        @media (prefers-color-scheme: dark) { .ticker-symbol { color: #f3f4f6; } }
+        .ticker-count { font-size: 0.875rem; color: #6b7280; }
+        @media (prefers-color-scheme: dark) { .ticker-count { color: #9ca3af; } }
+
+        .loading { text-align: center; padding: 60px; color: #6b7280; font-size: 1.1rem; }
+        .error { text-align: center; padding: 60px; color: #dc2626; background: #fef2f2; border-radius: 12px; margin: 20px 0; }
+        @media (prefers-color-scheme: dark) { .error { background: #7f1d1d; color: #fecaca; } }
+
+        .refresh-btn { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; cursor: pointer; margin: 20px auto; display: block; }
+        .refresh-btn:hover { opacity: 0.9; }
+
+        .last-updated { text-align: center; color: #6b7280; font-size: 0.875rem; margin-top: 20px; }
+        @media (prefers-color-scheme: dark) { .last-updated { color: #9ca3af; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="branding">
+            <div class="logo-container">
+                <div class="logo-icon"><div class="chart-line"></div></div>
+                <span class="logo">Holdings</span><span class="domain">.me</span>
+                <span class="admin-badge">ANALYTICS</span>
+            </div>
+            <div class="tagline">Portfolio snapshot, simplified</div>
+        </div>
+
+        <div id="loading" class="loading">
+            Loading analytics data...
+        </div>
+
+        <div id="error" class="error" style="display: none;"></div>
+
+        <div id="analytics-content" style="display: none;">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-title">Portfolios Created</div>
+                    <div class="stat-period">Today</div>
+                    <div class="stat-value" id="portfoliosToday">0</div>
+                    <div class="stat-change" id="portfoliosTodayChange">
+                        <span>vs yesterday</span>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-title">Portfolio Views</div>
+                    <div class="stat-period">Today</div>
+                    <div class="stat-value" id="viewsToday">0</div>
+                    <div class="stat-change" id="viewsTodayChange">
+                        <span>vs yesterday</span>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-title">Unique Users</div>
+                    <div class="stat-period">Today (approx)</div>
+                    <div class="stat-value" id="uniqueUsersToday">0</div>
+                    <div class="stat-change neutral">
+                        <span>unique IPs</span>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-title">Conversion Rate</div>
+                    <div class="stat-period">7-day average</div>
+                    <div class="stat-value" id="conversionRate">0%</div>
+                    <div class="stat-change neutral">
+                        <span>views to creations</span>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-title">Weekly Portfolios</div>
+                    <div class="stat-period">Last 7 days</div>
+                    <div class="stat-value" id="weeklyPortfolios">0</div>
+                    <div class="stat-change neutral">
+                        <span>total created</span>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-title">Weekly Views</div>
+                    <div class="stat-period">Last 7 days</div>
+                    <div class="stat-value" id="weeklyViews">0</div>
+                    <div class="stat-change neutral">
+                        <span>total views</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chart-section">
+                <div class="section-title">Popular Tickers</div>
+                <div class="ticker-list" id="tickerList">
+                    <!-- Populated by JavaScript -->
+                </div>
+            </div>
+
+            <button class="refresh-btn" onclick="loadAnalytics()">🔄 Refresh Data</button>
+
+            <div class="last-updated" id="lastUpdated">Last updated: Never</div>
+        </div>
+    </div>
+
+    <script>
+        let analyticsData = null;
+
+        async function loadAnalytics() {
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('analytics-content').style.display = 'none';
+            document.getElementById('error').style.display = 'none';
+
+            try {
+                const response = await fetch('/api/portfolios/RBM32888');
+                const data = await response.json();
+
+                if (!response.ok) {
+                    showError(data.error || 'Failed to load analytics');
+                    return;
+                }
+
+                analyticsData = data;
+                displayAnalytics();
+
+            } catch (error) {
+                showError('Failed to load analytics: ' + error.message);
+            }
+        }
+
+        function displayAnalytics() {
+            document.getElementById('loading').style.display = 'none';
+
+            const data = analyticsData;
+
+            // Handle error cases
+            if (data.error) {
+                showError(`${data.error}${data.message ? ': ' + data.message : ''}`);
+                return;
+            }
+
+            document.getElementById('analytics-content').style.display = 'block';
+
+            // Today's stats
+            document.getElementById('portfoliosToday').textContent = data.today.portfolios;
+            document.getElementById('viewsToday').textContent = data.today.views;
+            document.getElementById('uniqueUsersToday').textContent = data.today.uniqueUsers;
+
+            // Weekly stats
+            document.getElementById('weeklyPortfolios').textContent = data.weekly.portfolios;
+            document.getElementById('weeklyViews').textContent = data.weekly.views;
+            document.getElementById('conversionRate').textContent = data.conversionRate + '%';
+
+            // Calculate changes
+            const portfolioChange = data.today.portfolios - data.yesterday.portfolios;
+            const viewChange = data.today.views - data.yesterday.views;
+
+            updateChangeIndicator('portfoliosTodayChange', portfolioChange, 'portfolios');
+            updateChangeIndicator('viewsTodayChange', viewChange, 'views');
+
+            // Popular tickers
+            const tickerList = document.getElementById('tickerList');
+            if (data.topTickers && data.topTickers.length > 0) {
+                tickerList.innerHTML = data.topTickers.map(ticker => `
+                    <div class="ticker-item">
+                        <div class="ticker-symbol">${ticker.ticker}</div>
+                        <div class="ticker-count">${ticker.count} uses</div>
+                    </div>
+                `).join('');
+            } else {
+                tickerList.innerHTML = '<div class="ticker-item"><div class="ticker-symbol">No data yet</div></div>';
+            }
+
+            // Last updated
+            const lastUpdated = new Date(data.lastUpdated).toLocaleString();
+            let lastUpdatedText = `Last updated: ${lastUpdated}`;
+            if (data.message) {
+                lastUpdatedText += ` (${data.message})`;
+            }
+            document.getElementById('lastUpdated').textContent = lastUpdatedText;
+        }
+
+        function updateChangeIndicator(elementId, change, unit) {
+            const element = document.getElementById(elementId);
+            const arrow = change > 0 ? '↑' : change < 0 ? '↓' : '→';
+            const className = change > 0 ? 'positive' : change < 0 ? 'negative' : 'neutral';
+
+            element.className = `stat-change ${className}`;
+            element.innerHTML = `<span>${arrow} ${Math.abs(change)} ${unit} vs yesterday</span>`;
+        }
+
+        function showError(message) {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('error').style.display = 'block';
+            document.getElementById('error').textContent = message;
+        }
+
+        // Auto-refresh every 5 minutes
+        setInterval(loadAnalytics, 5 * 60 * 1000);
+
+        // Load analytics on page load
+        loadAnalytics();
+    </script>
+</body>
+</html>

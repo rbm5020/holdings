@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Holdings.me Portfolio Builder</title>
 
     <!-- Favicon and Home Screen Icons -->
@@ -58,10 +58,10 @@
         .spreadsheet-cell:last-child { border-right: none; }
         .cell-input { width: 100%; border: none; background: transparent; padding: 6px; font-size: 14px; outline: none; text-align: center; color: inherit; }
         .cell-input:first-child { text-align: left; }
-        .cell-input:focus { background: white; border: 2px solid #667eea; border-radius: 4px; }
-        .cell-input.valid { background: white; border: 2px solid #34c759; border-radius: 4px; }
-        .cell-input.invalid { background: white; border: 2px solid #ff3b30; border-radius: 4px; }
-        .cell-input.validating { background: white; border: 2px solid #007aff; border-radius: 4px; }
+        .cell-input:focus { background: rgba(255,255,255,0.1); border: 2px solid #667eea; border-radius: 4px; }
+        .cell-input.valid { border: 2px solid #34c759; border-radius: 4px; }
+        .cell-input.invalid { border: 2px solid #ff3b30; border-radius: 4px; }
+        .cell-input.validating { border: 2px solid #007aff; border-radius: 4px; }
         @media (prefers-color-scheme: dark) { .cell-input:focus { background: #2a2a2a; color: #f9fafb; } }
         
         .category-dot { width: 24px; height: 24px; border-radius: 50%; border: 2px solid #e5e7eb; cursor: pointer; }
@@ -82,7 +82,11 @@
         @media (prefers-color-scheme: dark) { .add-btn { background: #374151; color: #9ca3af; border-color: #4b5563; } .add-btn:hover { background: #4b5563; } }
         
         .groups-display { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 15px; min-height: 40px; }
-        .group-tag { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 16px; font-size: 13px; color: white; }
+        .group-tag { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 16px; font-size: 13px; color: white; cursor: grab; transition: transform 0.2s, box-shadow 0.2s; }
+        .group-tag:active { cursor: grabbing; }
+        .group-tag.dragging { transform: scale(1.05); box-shadow: 0 8px 25px rgba(0,0,0,0.3); opacity: 0.8; z-index: 1000; }
+        .group-tag.drag-over { transform: translateX(4px); }
+        .drag-handle { margin-right: 4px; opacity: 0.7; font-size: 10px; line-height: 1; }
         .group-delete { background: rgba(255,255,255,0.3); border: none; border-radius: 50%; width: 16px; height: 16px; cursor: pointer; color: white; }
         .group-input { flex: 1; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px; background: white; color: #374151; }
         @media (prefers-color-scheme: dark) { .group-input { background: #2a2a2a; border-color: #6b7280; color: #f9fafb; } }
@@ -166,10 +170,22 @@
         function renderGroupTags() {
             const container = document.getElementById('groupsDisplay');
             container.innerHTML = '';
-            groups.forEach(group => {
+            groups.forEach((group, index) => {
                 const tag = document.createElement('div');
                 tag.className = `group-tag ${groupColors[group]}`;
-                tag.innerHTML = `<span>${group}</span><button class="group-delete" onclick="removeGroup('${group}')">×</button>`;
+                tag.draggable = true;
+                tag.dataset.group = group;
+                tag.dataset.index = index;
+                tag.innerHTML = `<span class="drag-handle">⋮⋮</span><span>${group}</span><button class="group-delete" onclick="removeGroup('${group}')">×</button>`;
+
+                // Add drag event listeners
+                tag.addEventListener('dragstart', handleDragStart);
+                tag.addEventListener('dragover', handleDragOver);
+                tag.addEventListener('drop', handleDrop);
+                tag.addEventListener('dragend', handleDragEnd);
+                tag.addEventListener('dragenter', handleDragEnter);
+                tag.addEventListener('dragleave', handleDragLeave);
+
                 container.appendChild(tag);
             });
         }
@@ -260,33 +276,11 @@
                 return;
             }
 
-            // Collect holdings data
-            const holdings = [];
-            document.querySelectorAll('.spreadsheet-row').forEach(row => {
-                const inputs = row.querySelectorAll('.cell-input');
-                const ticker = inputs[0].value.trim();
-                const quantity = inputs[1].value;
-                const category = row.querySelector('.category-select').value;
-
-                if (ticker) {
-                    holdings.push({
-                        ticker: ticker.toUpperCase(),
-                        quantity: parseFloat(quantity) || 0,
-                        category: category || null
-                    });
-                }
-            });
-            
-            // Get other form data
-            const duration = document.querySelector('.duration-select').value;
-            const email = document.querySelector('.email-input').value.trim();
-            
-            const data = {
-                holdings,
-                categories: groupColors,
-                duration,
-                email: email || null
-            };
+            const data = collectFormData();
+            if (!data.holdings.length) {
+                alert('Please add at least one holding');
+                return;
+            }
             
             try {
                 const response = await fetch('/api/portfolios', {
@@ -435,12 +429,25 @@
                     const tableBody = document.querySelector('.holdings-table tbody');
                     tableBody.innerHTML = '';
 
+                    // Load category order if available (backward compatibility)
+                    if (portfolio.categoryOrder) {
+                        groups = [...portfolio.categoryOrder];
+                    }
+
+                    // Load categories
+                    if (portfolio.categories) {
+                        groupColors = { ...groupColors, ...portfolio.categories };
+                    }
+
+                    // Re-render group tags to reflect loaded order
+                    renderGroupTags();
+
                     // Load portfolio data
                     portfolio.holdings.forEach(holding => {
                         createRowWithData({
                             ticker: holding.ticker,
                             shares: holding.quantity,
-                            group: portfolio.categories[0] || 'Stocks'
+                            group: holding.category || 'Stocks'
                         });
                     });
 
@@ -470,6 +477,101 @@
                 alert('Error loading portfolio for edit');
                 window.location.href = '/';
             }
+        }
+
+        // Drag and drop handlers for category reordering
+        let draggedElement = null;
+        let draggedIndex = null;
+
+        function handleDragStart(e) {
+            draggedElement = this;
+            draggedIndex = parseInt(this.dataset.index);
+            this.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/html', this.outerHTML);
+        }
+
+        function handleDragOver(e) {
+            if (e.preventDefault) {
+                e.preventDefault();
+            }
+            e.dataTransfer.dropEffect = 'move';
+            return false;
+        }
+
+        function handleDragEnter(e) {
+            if (this !== draggedElement) {
+                this.classList.add('drag-over');
+            }
+        }
+
+        function handleDragLeave(e) {
+            this.classList.remove('drag-over');
+        }
+
+        function handleDrop(e) {
+            if (e.stopPropagation) {
+                e.stopPropagation();
+            }
+
+            if (this !== draggedElement) {
+                const dropIndex = parseInt(this.dataset.index);
+
+                // Reorder the groups array
+                const draggedGroup = groups[draggedIndex];
+                groups.splice(draggedIndex, 1);
+                groups.splice(dropIndex, 0, draggedGroup);
+
+                // Re-render the tags with new order
+                renderGroupTags();
+
+                // Update all holding dropdowns to reflect new order
+                updateCategoryDropdowns();
+            }
+
+            return false;
+        }
+
+        function handleDragEnd(e) {
+            // Clean up visual states
+            document.querySelectorAll('.group-tag').forEach(tag => {
+                tag.classList.remove('dragging', 'drag-over');
+            });
+
+            draggedElement = null;
+            draggedIndex = null;
+        }
+
+        // Helper function to collect form data (used by both create and update)
+        function collectFormData() {
+            // Collect holdings data
+            const holdings = [];
+            document.querySelectorAll('.spreadsheet-row').forEach(row => {
+                const inputs = row.querySelectorAll('.cell-input');
+                const ticker = inputs[0].value.trim();
+                const quantity = inputs[1].value;
+                const category = row.querySelector('.category-select').value;
+
+                if (ticker) {
+                    holdings.push({
+                        ticker: ticker.toUpperCase(),
+                        quantity: parseFloat(quantity) || 0,
+                        category: category || null
+                    });
+                }
+            });
+
+            // Get other form data
+            const duration = document.querySelector('.duration-select').value;
+            const email = document.querySelector('.email-input').value.trim();
+
+            return {
+                holdings,
+                categories: groupColors,
+                categoryOrder: groups,
+                duration,
+                email: email || null
+            };
         }
 
         // Modified form submission to handle edit mode

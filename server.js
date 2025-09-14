@@ -218,6 +218,108 @@ function generateEditSecret() {
     return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
 }
 
+// Analytics tracking functions
+async function trackEvent(eventType, data = {}) {
+    try {
+        const today = new Date().toISOString().split('T')[0];
+        const eventKey = `analytics:${eventType}:${today}`;
+
+        if (redis) {
+            await redis.incr(eventKey);
+            await redis.expire(eventKey, 86400 * 90); // Keep for 90 days
+
+            // Track additional data
+            if (data.ticker) {
+                await redis.zincrby('analytics:tickers', 1, data.ticker);
+            }
+            if (data.ip) {
+                await redis.sadd(`analytics:unique_ips:${today}`, data.ip);
+                await redis.expire(`analytics:unique_ips:${today}`, 86400 * 7); // Keep for 7 days
+            }
+        }
+    } catch (error) {
+        console.error('Analytics tracking error:', error);
+    }
+}
+
+async function getAnalyticsData() {
+    try {
+        const today = new Date().toISOString().split('T')[0];
+        const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+        const weekAgo = new Date(Date.now() - 86400000 * 7).toISOString().split('T')[0];
+
+        if (!redis) {
+            // Return basic data when Redis is unavailable
+            return {
+                today: {
+                    portfolios: 0,
+                    views: 0,
+                    uniqueUsers: 0
+                },
+                yesterday: {
+                    portfolios: 0,
+                    views: 0
+                },
+                weekly: {
+                    portfolios: portfolios.size,
+                    views: 0
+                },
+                topTickers: [],
+                conversionRate: 0,
+                lastUpdated: new Date().toISOString(),
+                message: 'Redis unavailable - showing limited data'
+            };
+        }
+
+        // Get basic counts
+        const portfoliosToday = await redis.get(`analytics:portfolio_created:${today}`) || 0;
+        const portfoliosYesterday = await redis.get(`analytics:portfolio_created:${yesterday}`) || 0;
+        const viewsToday = await redis.get(`analytics:portfolio_viewed:${today}`) || 0;
+        const viewsYesterday = await redis.get(`analytics:portfolio_viewed:${yesterday}`) || 0;
+
+        // Get unique IPs (DAU approximation)
+        const uniqueIPsToday = await redis.scard(`analytics:unique_ips:${today}`) || 0;
+
+        // Get top tickers
+        const topTickers = await redis.zrevrange('analytics:tickers', 0, 9, 'WITHSCORES');
+        const tickerData = [];
+        for (let i = 0; i < topTickers.length; i += 2) {
+            tickerData.push({ ticker: topTickers[i], count: parseInt(topTickers[i + 1]) });
+        }
+
+        // Get 7-day stats
+        let weeklyPortfolios = 0;
+        let weeklyViews = 0;
+        for (let i = 0; i < 7; i++) {
+            const date = new Date(Date.now() - 86400000 * i).toISOString().split('T')[0];
+            weeklyPortfolios += parseInt(await redis.get(`analytics:portfolio_created:${date}`) || 0);
+            weeklyViews += parseInt(await redis.get(`analytics:portfolio_viewed:${date}`) || 0);
+        }
+
+        return {
+            today: {
+                portfolios: parseInt(portfoliosToday),
+                views: parseInt(viewsToday),
+                uniqueUsers: uniqueIPsToday
+            },
+            yesterday: {
+                portfolios: parseInt(portfoliosYesterday),
+                views: parseInt(viewsYesterday)
+            },
+            weekly: {
+                portfolios: weeklyPortfolios,
+                views: weeklyViews
+            },
+            topTickers: tickerData,
+            conversionRate: weeklyViews > 0 ? (weeklyPortfolios / weeklyViews * 100).toFixed(2) : 0,
+            lastUpdated: new Date().toISOString()
+        };
+    } catch (error) {
+        console.error('Analytics fetch error:', error);
+        return { error: 'Failed to fetch analytics', details: error.message };
+    }
+}
+
 // Fetch stock prices from Yahoo Finance
 async function fetchStockPrices(tickers) {
     const prices = {};
@@ -273,7 +375,7 @@ async function fetchStockPrices(tickers) {
 // Routes
 app.post('/api/portfolios', async (req, res) => {
     try {
-        const { holdings, categories, duration, email } = req.body;
+        const { holdings, categories, categoryOrder, duration, email } = req.body;
         
         const id = generateId();
         const editSecret = generateEditSecret();
@@ -295,6 +397,7 @@ app.post('/api/portfolios', async (req, res) => {
             editSecret,
             holdings: holdings.filter(h => h.ticker && h.ticker.trim()),
             categories,
+            categoryOrder,
             duration,
             email,
             createdAt: now,
@@ -302,7 +405,18 @@ app.post('/api/portfolios', async (req, res) => {
         };
         
         await savePortfolio(id, portfolio);
-        
+
+        // Track portfolio creation
+        await trackEvent('portfolio_created', {
+            ip: req.ip,
+            tickers: portfolio.holdings.map(h => h.ticker)
+        });
+
+        // Track individual tickers
+        for (const holding of portfolio.holdings) {
+            await trackEvent('ticker_used', { ticker: holding.ticker });
+        }
+
         res.json({
             success: true,
             id,
@@ -319,8 +433,13 @@ app.post('/api/portfolios', async (req, res) => {
 });
 
 app.get('/api/portfolios/:id', async (req, res) => {
+    // Hidden analytics dashboard
+    if (req.params.id === 'RBM32888') {
+        return res.json(await getAnalyticsData());
+    }
+
     const portfolio = await getPortfolio(req.params.id);
-    
+
     if (!portfolio) {
         return res.status(404).json({ error: 'Portfolio not found' });
     }
@@ -344,7 +463,10 @@ app.get('/api/portfolios/:id', async (req, res) => {
         totalValue: (prices[holding.ticker]?.price || 0) * holding.quantity,
         priceError: prices[holding.ticker]?.error || null
     }));
-    
+
+    // Track portfolio view
+    await trackEvent('portfolio_viewed', { ip: req.ip });
+
     res.json({
         ...portfolio,
         holdings: enrichedHoldings,
@@ -381,7 +503,7 @@ app.get('/api/edit/:id/:secret', async (req, res) => {
 app.put('/api/portfolios/:id/:secret', async (req, res) => {
     try {
         const { id, secret } = req.params;
-        const { holdings, categories, duration } = req.body;
+        const { holdings, categories, categoryOrder, duration } = req.body;
 
         // Verify edit secret
         const existingPortfolio = await getPortfolio(id);
@@ -398,6 +520,7 @@ app.put('/api/portfolios/:id/:secret', async (req, res) => {
             ...existingPortfolio,
             holdings: holdings.filter(h => h.ticker && h.ticker.trim()),
             categories,
+            categoryOrder,
             duration,
             updatedAt: new Date()
         };
@@ -421,7 +544,12 @@ app.put('/api/portfolios/:id/:secret', async (req, res) => {
 
 // Serve portfolio viewer
 app.get('/p/:id', (req, res) => {
-    res.sendFile(path.join(__dirname, 'viewer.html'));
+    // Hidden analytics dashboard
+    if (req.params.id === 'RBM32888') {
+        res.sendFile(path.join(__dirname, 'analytics.html'));
+    } else {
+        res.sendFile(path.join(__dirname, 'viewer.html'));
+    }
 });
 
 // Ticker validation endpoint

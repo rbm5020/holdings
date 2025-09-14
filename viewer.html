@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Holdings.me - Portfolio Tracker</title>
 
     <!-- Favicon and Home Screen Icons -->
@@ -238,17 +238,21 @@
                 pageNumber: 0
             });
 
-            // Category pages
+            // Category pages - use custom order if available
             let colorIndex = 1;
-            Object.entries(categorizedHoldings).forEach(([categoryName, holdings]) => {
-                pages.push({
-                    type: 'category',
-                    name: categoryName,
-                    holdings: holdings.slice(0, holdingsPerPage),
-                    colorIndex: colorIndex,
-                    pageNumber: colorIndex
-                });
-                colorIndex++;
+            const categoryOrder = portfolio.categoryOrder || Object.keys(categorizedHoldings).sort();
+
+            categoryOrder.forEach(categoryName => {
+                if (categorizedHoldings[categoryName]) {
+                    pages.push({
+                        type: 'category',
+                        name: categoryName,
+                        holdings: categorizedHoldings[categoryName].slice(0, holdingsPerPage),
+                        colorIndex: colorIndex,
+                        pageNumber: colorIndex
+                    });
+                    colorIndex++;
+                }
             });
 
             // Start on home page (page number 0)
@@ -276,7 +280,7 @@
             const yesterdayValue = total - totalDailyChange;
             const dailyPercent = yesterdayValue > 0 ? (totalDailyChange / yesterdayValue) * 100 : 0;
 
-            document.getElementById('totalValue').textContent = `$${total.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            document.getElementById('totalValue').textContent = formatDollarAmount(total);
             
             const changeEl = document.getElementById('totalChange');
             const arrowEl = document.getElementById('changeArrow');
@@ -287,9 +291,9 @@
             changeEl.className = `total-change ${isPositive ? 'positive' : 'negative'}`;
             
             if (showPercentage) {
-                textEl.textContent = `${Math.abs(dailyPercent).toFixed(2)}%`;
+                textEl.textContent = formatPercentage(Math.abs(dailyPercent));
             } else {
-                textEl.textContent = `$${Math.abs(totalDailyChange).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                textEl.textContent = formatDollarAmount(Math.abs(totalDailyChange));
             }
         }
 
@@ -326,14 +330,15 @@
 
                 if (showPercentage) {
                     // Total is showing percentage, so All Holdings shows dollar amount
-                    changeElement.textContent = `${isPositive ? '+' : ''}$${Math.abs(totalDailyChange).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                    const formattedAmount = formatDollarAmount(Math.abs(totalDailyChange));
+                    changeElement.textContent = `${isPositive ? '+' : ''}${formattedAmount.substring(1)}`; // Remove $ and add +/-
                 } else {
                     // Total is showing dollar amount, so All Holdings shows percentage
-                    changeElement.textContent = `${isPositive ? '+' : ''}${Math.abs(dailyPercent).toFixed(2)}%`;
+                    changeElement.textContent = `${isPositive ? '+' : ''}${formatPercentage(Math.abs(dailyPercent))}`;
                 }
             } else {
                 headerEl.className = `category-header page-positive color-${page.colorIndex}`;
-                containerEl.className = `holdings-container ${currentPage % 2 === 0 ? 'bg-white' : 'bg-gray'}`;
+                containerEl.className = 'holdings-container bg-gray';
 
                 // Show the separator for non-All Holdings pages
                 document.getElementById('categorySeparator').style.display = '';
@@ -349,7 +354,7 @@
                 const dailyPercent = yesterdayValue > 0 ? (categoryDailyChange / yesterdayValue) * 100 : 0;
                 const isPositive = categoryDailyChange >= 0;
                 
-                document.getElementById('categoryTotal').textContent = `$${categoryTotal.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                document.getElementById('categoryTotal').textContent = formatDollarAmount(categoryTotal);
                 
                 const changeElement = document.getElementById('categoryChange');
                 changeElement.style.cursor = 'pointer';
@@ -357,9 +362,10 @@
                 changeElement.className = isPositive ? 'positive' : 'negative';
                 
                 if (showCategoryDailyDollar) {
-                    changeElement.textContent = `${isPositive ? '+' : ''}$${Math.abs(categoryDailyChange).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                    const formattedAmount = formatDollarAmount(Math.abs(categoryDailyChange));
+                    changeElement.textContent = `${isPositive ? '+' : ''}${formattedAmount.substring(1)}`;
                 } else {
-                    changeElement.textContent = `${isPositive ? '+' : ''}${dailyPercent.toFixed(2)}%`;
+                    changeElement.textContent = `${isPositive ? '+' : ''}${formatPercentage(dailyPercent)}`;
                 }
             }
             
@@ -376,9 +382,9 @@
                 rows.push(`
                     <tr>
                         <td style="font-weight: 600;">${holding.ticker}</td>
-                        <td style="text-align: right; font-weight: 500;">$${holding.currentPrice.toFixed(2)}</td>
-                        <td style="text-align: right; font-weight: 500;" class="${holding.dailyChange >= 0 ? 'positive' : 'negative'}">${holding.dailyChange >= 0 ? '+' : ''}$${holding.dailyChange.toFixed(2)}</td>
-                        <td style="text-align: right; font-weight: 600;" class="${dailyChange >= 0 ? 'positive' : 'negative'}">$${Math.abs(dailyChange).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                        <td style="text-align: right; font-weight: 500;">${formatDollarAmount(holding.currentPrice)}</td>
+                        <td style="text-align: right; font-weight: 500;" class="${holding.dailyChange >= 0 ? 'positive' : 'negative'}">${holding.dailyChange >= 0 ? '+' : ''}${formatDollarAmount(holding.dailyChange).substring(1)}</td>
+                        <td style="text-align: right; font-weight: 600;" class="${dailyChange >= 0 ? 'positive' : 'negative'}">${formatDollarAmount(Math.abs(dailyChange))}</td>
                     </tr>
                 `);
             });
@@ -470,6 +476,34 @@
                 else previousPage();
             }
         });
+
+        // Number formatting functions
+        function formatDollarAmount(amount) {
+            if (amount === 0) return '$0.00';
+
+            const absAmount = Math.abs(amount);
+            const sign = amount < 0 ? '-' : '';
+
+            if (absAmount >= 1000000) {
+                const millions = absAmount / 1000000;
+                const formatted = millions % 1 === 0 ? millions.toFixed(0) : millions.toFixed(2).replace(/\.?0+$/, '');
+                return `${sign}$${formatted}M`;
+            } else if (absAmount >= 1000) {
+                const thousands = absAmount / 1000;
+                const formatted = thousands % 1 === 0 ? thousands.toFixed(0) : thousands.toFixed(2).replace(/\.?0+$/, '');
+                return `${sign}$${formatted}K`;
+            } else {
+                return `${sign}$${absAmount.toFixed(2)}`;
+            }
+        }
+
+        function formatPercentage(percent) {
+            return `${percent.toFixed(2)}%`;
+        }
+
+        function formatShareQuantity(shares) {
+            return shares.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        }
 
         // Load portfolio on page load
         loadPortfolio();
