@@ -41,10 +41,11 @@
         .portfolio-label { font-size: 0.9rem; font-weight: 600; color: #6b7280; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
         .total-value { font-size: 2.8rem; font-weight: 800; color: #1f2937; line-height: 0.9; margin-bottom: 2px; }
         @media (prefers-color-scheme: dark) { .total-value { color: #f9fafb; } }
-        .total-change { font-size: 1.1rem; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; padding: 8px 16px; border-radius: 6px; outline: none; }
+        .total-change { font-size: 1.1rem; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; padding: 8px 16px; border-radius: 6px; outline: none; border: none; box-shadow: none; -webkit-appearance: none; -moz-appearance: none; appearance: none; }
         .total-change:hover { background: rgba(0,0,0,0.05); }
-        .total-change:focus { outline: none; }
-        .total-change:active { background: rgba(0,0,0,0.1); }
+        .total-change:focus { outline: none !important; border: none !important; box-shadow: none !important; }
+        .total-change:active { background: rgba(0,0,0,0.1); outline: none !important; border: none !important; box-shadow: none !important; }
+        .total-change:focus-visible { outline: none !important; }
         @media (prefers-color-scheme: dark) { .total-change:hover { background: rgba(255,255,255,0.05); } .total-change:active { background: rgba(255,255,255,0.1); } }
         .positive { color: #059669; }
         .negative { color: #dc2626; }
@@ -101,11 +102,16 @@
         * {
             touch-action: manipulation;
             -webkit-touch-callout: none;
-            -webkit-tap-highlight-color: transparent;
+            -webkit-tap-highlight-color: transparent !important;
             outline: none;
+            -webkit-focus-ring-color: transparent;
         }
         *:focus {
-            outline: none;
+            outline: none !important;
+            box-shadow: none !important;
+        }
+        *:focus-visible {
+            outline: none !important;
         }
         body {
             -webkit-text-size-adjust: 100%;
@@ -117,6 +123,13 @@
             -webkit-user-select: auto;
             user-select: auto;
             touch-action: manipulation;
+        }
+
+        /* Extra aggressive anti-highlight */
+        .total-change, #totalChange {
+            -webkit-tap-highlight-color: rgba(0,0,0,0) !important;
+            -webkit-tap-highlight-color: transparent !important;
+            -webkit-focus-ring-color: transparent !important;
         }
     </style>
 </head>
