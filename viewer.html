@@ -94,6 +94,24 @@
             .portfolio-label { font-size: 0.8rem; margin-bottom: 2px; }
             .total-change { font-size: 1rem; }
         }
+
+        /* Mobile app-style touch behaviors */
+        * {
+            touch-action: manipulation;
+            -webkit-touch-callout: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        body {
+            -webkit-text-size-adjust: 100%;
+            -webkit-user-select: none;
+            user-select: none;
+            overscroll-behavior: none;
+        }
+        input, select, textarea, button {
+            -webkit-user-select: auto;
+            user-select: auto;
+            touch-action: manipulation;
+        }
     </style>
 </head>
 <body>
@@ -531,6 +549,27 @@
         function formatShareQuantity(shares) {
             return shares.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
         }
+
+        // Prevent zoom gestures and double-tap zoom
+        document.addEventListener('gesturestart', function (e) {
+            e.preventDefault();
+        });
+        document.addEventListener('gesturechange', function (e) {
+            e.preventDefault();
+        });
+        document.addEventListener('gestureend', function (e) {
+            e.preventDefault();
+        });
+
+        // Prevent double-tap zoom
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', function (event) {
+            const now = (new Date()).getTime();
+            if (now - lastTouchEnd <= 300) {
+                event.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, false);
 
         // Load portfolio on page load
         loadPortfolio();
