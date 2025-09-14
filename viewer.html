@@ -153,7 +153,7 @@
             <div class="header">
                 <div class="portfolio-label">Total</div>
                 <div class="total-value" id="totalValue">$0.00</div>
-                <div class="total-change" id="totalChange" onclick="toggleChangeDisplay()">
+                <div class="total-change" id="totalChange" onclick="toggleChangeDisplay()" tabindex="-1">
                     <span id="changeArrow">↓</span>
                     <span id="changeText">$0.00</span>
                 </div>
@@ -481,6 +481,10 @@
             showPercentage = !showPercentage;
             updateTotalValue();
             updateCurrentPage(); // Update All Holdings to show opposite value
+
+            // Force blur to remove any focus highlight
+            document.getElementById('totalChange').blur();
+            document.activeElement.blur();
         }
 
         function toggleCategoryDailyDisplay() {
@@ -589,6 +593,26 @@
             }
             lastTouchEnd = now;
         }, false);
+
+        // Additional anti-highlight measures for total toggle
+        document.addEventListener('DOMContentLoaded', function() {
+            const totalChange = document.getElementById('totalChange');
+            if (totalChange) {
+                totalChange.addEventListener('touchstart', function(e) {
+                    this.blur();
+                    setTimeout(() => this.blur(), 0);
+                });
+
+                totalChange.addEventListener('click', function(e) {
+                    this.blur();
+                    setTimeout(() => this.blur(), 0);
+                });
+
+                totalChange.addEventListener('focus', function(e) {
+                    this.blur();
+                });
+            }
+        });
 
         // Load portfolio on page load
         loadPortfolio();
