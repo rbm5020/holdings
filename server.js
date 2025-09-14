@@ -613,6 +613,11 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'creator.html'));
 });
 
+// Serve success page
+app.get('/success.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'success.html'));
+});
+
 // Static files after routes (so they don't override our specific routes)
 app.use(express.static('.'));
 
