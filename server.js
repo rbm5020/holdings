@@ -633,12 +633,13 @@ app.get('/p/:id', (req, res) => {
 app.get('/api/validate-ticker/:ticker', async (req, res) => {
     try {
         const ticker = req.params.ticker.toUpperCase().trim();
+        const category = req.query.category?.toLowerCase();
 
         if (!ticker) {
             return res.json({ valid: false, error: 'Empty ticker' });
         }
 
-        // Crypto translation layer
+        // Context-aware validation based on category
         const cryptoMap = {
             'BTC': 'BTC-USD',
             'ETH': 'ETH-USD',
@@ -649,11 +650,26 @@ app.get('/api/validate-ticker/:ticker', async (req, res) => {
             'ADA': 'ADA-USD',
             'SOL': 'SOL-USD',
             'DOT': 'DOT-USD',
-            'MATIC': 'MATIC-USD'
+            'MATIC': 'MATIC-USD',
+            'AAVE': 'AAVE-USD',
+            'AVAX': 'AVAX-USD',
+            'LINK': 'LINK-USD',
+            'UNI': 'UNI-USD',
+            'ATOM': 'ATOM-USD'
         };
 
-        // Check if it's a crypto and translate
-        const actualTicker = cryptoMap[ticker] || ticker;
+        let actualTicker = ticker;
+
+        if (category === 'crypto') {
+            // Force crypto translation for crypto category
+            actualTicker = cryptoMap[ticker] || ticker + '-USD';
+        } else if (category && category !== 'crypto') {
+            // For non-crypto categories, never apply crypto translation
+            actualTicker = ticker;
+        } else {
+            // No category specified - use original fallback logic
+            actualTicker = cryptoMap[ticker] || ticker;
+        }
 
         // Validate by trying to fetch price from Yahoo Finance
         const response = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${actualTicker}`, {

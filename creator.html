@@ -99,6 +99,23 @@
         .submit-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4); }
         .delete-btn { background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%); color: white; border: none; padding: 18px 40px; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; width: 100%; margin-top: 20px; }
         .delete-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(255, 107, 107, 0.4); }
+        .info-icon { color: #6b7280; cursor: pointer; margin-left: 6px; font-size: 14px; font-weight: normal; position: relative; }
+        .info-icon:hover { color: #374151; }
+        .info-icon:hover::after {
+            content: "Click for ticker help";
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1f2937;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            white-space: nowrap;
+            z-index: 1000;
+            pointer-events: none;
+        }
 
         /* Mobile app-style touch behaviors */
         * {
@@ -141,7 +158,7 @@
             
             <div class="spreadsheet">
                 <div class="spreadsheet-header">
-                    <div>Ticker</div><div>Qty</div><div>Type</div><div></div>
+                    <div>Ticker <span class="info-icon" onclick="showTickerHelp()">ⓘ</span></div><div>Qty</div><div>Type</div><div></div>
                 </div>
                 <div id="spreadsheetBody"></div>
             </div>
@@ -369,7 +386,17 @@
             input.classList.remove('valid', 'invalid');
 
             try {
-                const response = await fetch(`/api/validate-ticker/${encodeURIComponent(ticker)}`);
+                // Get the category from the same row for context-aware validation
+                const row = input.closest('.spreadsheet-row');
+                const categorySelect = row?.querySelector('select[name="category"]');
+                const category = categorySelect?.value || '';
+
+                let url = `/api/validate-ticker/${encodeURIComponent(ticker)}`;
+                if (category) {
+                    url += `?category=${encodeURIComponent(category)}`;
+                }
+
+                const response = await fetch(url);
                 const result = await response.json();
 
                 // Remove validating state
@@ -711,6 +738,21 @@
             }
             lastTouchEnd = now;
         }, false);
+
+        // Ticker help function
+        function showTickerHelp() {
+            alert(
+                '📈 Ticker Symbol Help\n\n' +
+                '• STOCKS: Use standard symbols (AAPL, GOOGL, TSLA)\n' +
+                '• CRYPTO: Use coin names (BTC, ETH, SOL, AAVE, LINK)\n' +
+                '• ETFs: Use full symbols (SPY, QQQ, VTI)\n\n' +
+                '💡 SMART VALIDATION:\n' +
+                '  - Select the correct category first for accurate validation\n' +
+                '  - If category is "Crypto", we\'ll automatically add -USD\n' +
+                '  - Set quantity to 0 to create a watchlist\n\n' +
+                '✨ This solves conflicts like BTC (Bitcoin vs. stock) - just select the right category!'
+            );
+        }
 
         // Delete portfolio functions
         function confirmDeletePortfolio(portfolioId, editSecret) {
