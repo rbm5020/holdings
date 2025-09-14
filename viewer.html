@@ -280,7 +280,7 @@
             const yesterdayValue = total - totalDailyChange;
             const dailyPercent = yesterdayValue > 0 ? (totalDailyChange / yesterdayValue) * 100 : 0;
 
-            document.getElementById('totalValue').textContent = formatDollarAmount(total);
+            document.getElementById('totalValue').textContent = formatTotalValue(total);
             
             const changeEl = document.getElementById('totalChange');
             const arrowEl = document.getElementById('changeArrow');
@@ -293,7 +293,7 @@
             if (showPercentage) {
                 textEl.textContent = formatPercentage(Math.abs(dailyPercent));
             } else {
-                textEl.textContent = formatDollarAmount(Math.abs(totalDailyChange));
+                textEl.textContent = formatDailyChange(Math.abs(totalDailyChange));
             }
         }
 
@@ -330,7 +330,7 @@
 
                 if (showPercentage) {
                     // Total is showing percentage, so All Holdings shows dollar amount
-                    const formattedAmount = formatDollarAmount(Math.abs(totalDailyChange));
+                    const formattedAmount = formatDailyChange(Math.abs(totalDailyChange));
                     changeElement.textContent = `${isPositive ? '+' : ''}${formattedAmount.substring(1)}`; // Remove $ and add +/-
                 } else {
                     // Total is showing dollar amount, so All Holdings shows percentage
@@ -362,7 +362,7 @@
                 changeElement.className = isPositive ? 'positive' : 'negative';
                 
                 if (showCategoryDailyDollar) {
-                    const formattedAmount = formatDollarAmount(Math.abs(categoryDailyChange));
+                    const formattedAmount = formatDailyChange(Math.abs(categoryDailyChange));
                     changeElement.textContent = `${isPositive ? '+' : ''}${formattedAmount.substring(1)}`;
                 } else {
                     changeElement.textContent = `${isPositive ? '+' : ''}${formatPercentage(dailyPercent)}`;
@@ -383,8 +383,8 @@
                     <tr>
                         <td style="font-weight: 600;">${holding.ticker}</td>
                         <td style="text-align: right; font-weight: 500;">${formatDollarAmount(holding.currentPrice)}</td>
-                        <td style="text-align: right; font-weight: 500;" class="${holding.dailyChange >= 0 ? 'positive' : 'negative'}">${holding.dailyChange >= 0 ? '+' : ''}${formatDollarAmount(holding.dailyChange).substring(1)}</td>
-                        <td style="text-align: right; font-weight: 600;" class="${dailyChange >= 0 ? 'positive' : 'negative'}">${formatDollarAmount(Math.abs(dailyChange))}</td>
+                        <td style="text-align: right; font-weight: 500;" class="${holding.dailyChange >= 0 ? 'positive' : 'negative'}">${holding.dailyChange >= 0 ? '+' : ''}${formatDailyChange(holding.dailyChange).substring(1)}</td>
+                        <td style="text-align: right; font-weight: 600;" class="${dailyChange >= 0 ? 'positive' : 'negative'}">${formatDailyChange(Math.abs(dailyChange))}</td>
                     </tr>
                 `);
             });
@@ -494,6 +494,33 @@
                 return `${sign}$${formatted}K`;
             } else {
                 return `${sign}$${absAmount.toFixed(2)}`;
+            }
+        }
+
+        // For total portfolio value - no abbreviation (plenty of space)
+        function formatTotalValue(amount) {
+            if (amount === 0) return '$0.00';
+            const sign = amount < 0 ? '-' : '';
+            return `${sign}$${Math.abs(amount).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+        }
+
+        // For daily changes - only abbreviate at 100K+
+        function formatDailyChange(amount) {
+            if (amount === 0) return '$0.00';
+
+            const absAmount = Math.abs(amount);
+            const sign = amount < 0 ? '-' : '';
+
+            if (absAmount >= 1000000) {
+                const millions = absAmount / 1000000;
+                const formatted = millions % 1 === 0 ? millions.toFixed(0) : millions.toFixed(2).replace(/\.?0+$/, '');
+                return `${sign}$${formatted}M`;
+            } else if (absAmount >= 100000) {
+                const thousands = absAmount / 1000;
+                const formatted = thousands % 1 === 0 ? thousands.toFixed(0) : thousands.toFixed(1);
+                return `${sign}$${formatted}K`;
+            } else {
+                return `${sign}$${absAmount.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
             }
         }
 
