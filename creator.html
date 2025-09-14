@@ -198,7 +198,7 @@
                 tag.draggable = true;
                 tag.dataset.group = group;
                 tag.dataset.index = index;
-                tag.innerHTML = `<span class="drag-handle">⋮⋮</span><span>${group}</span><button class="group-delete" onclick="removeGroup('${group}')">×</button>`;
+                tag.innerHTML = `<span class="drag-handle">⋮⋮</span><span>${group}</span><button class="group-delete" draggable="false" onclick="event.stopPropagation(); removeGroup('${group}')">×</button>`;
 
                 // Add drag event listeners
                 tag.addEventListener('dragstart', handleDragStart);
@@ -506,37 +506,46 @@
         let draggedIndex = null;
 
         function handleDragStart(e) {
+            // Don't start drag if clicking on delete button
+            if (e.target.classList.contains('group-delete')) {
+                e.preventDefault();
+                return false;
+            }
+
+            e.stopPropagation();
             draggedElement = this;
             draggedIndex = parseInt(this.dataset.index);
             this.classList.add('dragging');
             e.dataTransfer.effectAllowed = 'move';
-            e.dataTransfer.setData('text/html', this.outerHTML);
+            e.dataTransfer.setData('text/plain', ''); // Minimal data to satisfy HTML5 drag API
         }
 
         function handleDragOver(e) {
-            if (e.preventDefault) {
-                e.preventDefault();
-            }
+            e.preventDefault();
+            e.stopPropagation();
             e.dataTransfer.dropEffect = 'move';
             return false;
         }
 
         function handleDragEnter(e) {
+            e.preventDefault();
+            e.stopPropagation();
             if (this !== draggedElement) {
                 this.classList.add('drag-over');
             }
         }
 
         function handleDragLeave(e) {
+            e.preventDefault();
+            e.stopPropagation();
             this.classList.remove('drag-over');
         }
 
         function handleDrop(e) {
-            if (e.stopPropagation) {
-                e.stopPropagation();
-            }
+            e.preventDefault();
+            e.stopPropagation();
 
-            if (this !== draggedElement) {
+            if (this !== draggedElement && draggedElement) {
                 const dropIndex = parseInt(this.dataset.index);
 
                 // Reorder the groups array
@@ -555,6 +564,9 @@
         }
 
         function handleDragEnd(e) {
+            e.preventDefault();
+            e.stopPropagation();
+
             // Clean up visual states
             document.querySelectorAll('.group-tag').forEach(tag => {
                 tag.classList.remove('dragging', 'drag-over');
