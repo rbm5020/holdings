@@ -216,11 +216,39 @@ async function deletePortfolio(id) {
             ]);
         } else {
             portfolios.delete(id);
+            // Also delete from external DB
+            await deleteFromExternalDB(id);
         }
     } catch (error) {
         console.error('Redis delete error:', error);
-        // Fallback to in-memory storage
+        // Fallback to in-memory storage and external DB
         portfolios.delete(id);
+        await deleteFromExternalDB(id);
+    }
+}
+
+async function deleteFromExternalDB(id) {
+    try {
+        if (!process.env.SUPABASE_URL) {
+            console.log(`⚠️ No SUPABASE_URL configured - cannot delete portfolio ${id} from external DB`);
+            return;
+        }
+
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/portfolios?id=eq.${id}`, {
+            method: 'DELETE',
+            headers: {
+                'apikey': SUPABASE_ANON_KEY,
+                'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+            }
+        });
+
+        if (response.ok) {
+            console.log(`✅ Deleted portfolio ${id} from Supabase`);
+        } else {
+            console.log(`❌ Failed to delete portfolio ${id} from Supabase: ${response.status}`);
+        }
+    } catch (error) {
+        console.error(`Error deleting portfolio ${id} from external DB:`, error);
     }
 }
 
@@ -514,6 +542,36 @@ app.get('/api/edit/:id/:secret', async (req, res) => {
         });
     } catch (error) {
         console.error('Edit validation error:', error);
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
+// Delete portfolio endpoint
+app.delete('/api/portfolios/:id/:secret', async (req, res) => {
+    try {
+        const { id, secret } = req.params;
+        const portfolio = await getPortfolio(id);
+
+        if (!portfolio) {
+            return res.status(404).json({ error: 'Portfolio not found' });
+        }
+
+        if (portfolio.editSecret !== secret) {
+            return res.status(403).json({ error: 'Invalid edit secret' });
+        }
+
+        // Valid magic link - delete the portfolio
+        await deletePortfolio(id);
+
+        // Track deletion event
+        await trackEvent('portfolio_deleted', {
+            ip: req.ip,
+            portfolioId: id
+        });
+
+        res.json({ success: true, message: 'Portfolio deleted successfully' });
+    } catch (error) {
+        console.error('Portfolio deletion error:', error);
         res.status(500).json({ error: 'Server error' });
     }
 });
