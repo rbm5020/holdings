@@ -131,6 +131,14 @@
             -webkit-tap-highlight-color: transparent !important;
             -webkit-focus-ring-color: transparent !important;
         }
+
+        /* Make child elements clickable and maintain styling */
+        #changeArrow, #changeText {
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent !important;
+            outline: none !important;
+            user-select: none;
+        }
     </style>
 </head>
 <body>
@@ -153,9 +161,9 @@
             <div class="header">
                 <div class="portfolio-label">Total</div>
                 <div class="total-value" id="totalValue">$0.00</div>
-                <div class="total-change" id="totalChange" onclick="toggleChangeDisplay()" tabindex="-1">
-                    <span id="changeArrow">↓</span>
-                    <span id="changeText">$0.00</span>
+                <div class="total-change" id="totalChange" tabindex="-1" style="pointer-events: none;">
+                    <span id="changeArrow" style="pointer-events: auto;">↓</span>
+                    <span id="changeText" style="pointer-events: auto;">$0.00</span>
                 </div>
             </div>
 
@@ -481,10 +489,6 @@
             showPercentage = !showPercentage;
             updateTotalValue();
             updateCurrentPage(); // Update All Holdings to show opposite value
-
-            // Force blur to remove any focus highlight
-            document.getElementById('totalChange').blur();
-            document.activeElement.blur();
         }
 
         function toggleCategoryDailyDisplay() {
@@ -594,22 +598,46 @@
             lastTouchEnd = now;
         }, false);
 
-        // Additional anti-highlight measures for total toggle
+        // Event delegation for total toggle to avoid focus issues
         document.addEventListener('DOMContentLoaded', function() {
-            const totalChange = document.getElementById('totalChange');
-            if (totalChange) {
-                totalChange.addEventListener('touchstart', function(e) {
-                    this.blur();
-                    setTimeout(() => this.blur(), 0);
-                });
+            const changeArrow = document.getElementById('changeArrow');
+            const changeText = document.getElementById('changeText');
 
-                totalChange.addEventListener('click', function(e) {
-                    this.blur();
-                    setTimeout(() => this.blur(), 0);
-                });
+            if (changeArrow && changeText) {
+                [changeArrow, changeText].forEach(element => {
+                    element.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        toggleChangeDisplay();
 
-                totalChange.addEventListener('focus', function(e) {
-                    this.blur();
+                        // 1ms "unclick" to remove any focus
+                        setTimeout(() => {
+                            this.blur();
+                            document.activeElement.blur();
+                            if (document.activeElement !== document.body) {
+                                document.activeElement.blur();
+                            }
+                        }, 1);
+                    });
+
+                    element.addEventListener('touchstart', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        // Immediate blur on touch
+                        this.blur();
+                    });
+
+                    element.addEventListener('touchend', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        toggleChangeDisplay();
+
+                        // 1ms "unclick" for touch too
+                        setTimeout(() => {
+                            this.blur();
+                            document.activeElement.blur();
+                        }, 1);
+                    });
                 });
             }
         });
