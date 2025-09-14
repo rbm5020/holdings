@@ -36,8 +36,9 @@
         @media (prefers-color-scheme: dark) { .tagline { color: #94a3b8; } }
         
         .header { text-align: center; margin-bottom: 15px; background: white; padding: 12px 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: 1px solid #e5e7eb; }
+        .header:focus { outline: none !important; border-color: #e5e7eb !important; box-shadow: 0 2px 8px rgba(0,0,0,0.05) !important; }
         @media (max-width: 640px) { .header { margin-bottom: 4px; padding: 4px 12px; } }
-        @media (prefers-color-scheme: dark) { .header { background: #2a2a2a; border-color: #404040; } }
+        @media (prefers-color-scheme: dark) { .header { background: #2a2a2a; border-color: #404040; } .header:focus { border-color: #404040 !important; } }
         .portfolio-label { font-size: 0.9rem; font-weight: 600; color: #6b7280; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
         .total-value { font-size: 2.8rem; font-weight: 800; color: #1f2937; line-height: 0.9; margin-bottom: 2px; }
         @media (prefers-color-scheme: dark) { .total-value { color: #f9fafb; } }
@@ -158,7 +159,7 @@
         <div id="error" class="error" style="display: none;"></div>
 
         <div id="portfolio-content" style="display: none;">
-            <div class="header">
+            <div class="header" tabindex="-1">
                 <div class="portfolio-label">Total</div>
                 <div class="total-value" id="totalValue">$0.00</div>
                 <div class="total-change" id="totalChange" tabindex="-1" style="pointer-events: none;">
@@ -617,6 +618,12 @@
                             if (document.activeElement !== document.body) {
                                 document.activeElement.blur();
                             }
+                            // Phantom click on background padding to steal focus
+                            const phantomArea = document.querySelector('.header');
+                            if (phantomArea) {
+                                phantomArea.focus();
+                                setTimeout(() => phantomArea.blur(), 1);
+                            }
                         }, 1);
                     });
 
@@ -636,6 +643,12 @@
                         setTimeout(() => {
                             this.blur();
                             document.activeElement.blur();
+                            // Phantom click on background padding to steal focus
+                            const phantomArea = document.querySelector('.header');
+                            if (phantomArea) {
+                                phantomArea.focus();
+                                setTimeout(() => phantomArea.blur(), 1);
+                            }
                         }, 1);
                     });
                 });
