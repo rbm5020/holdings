@@ -151,7 +151,7 @@
             <h2 class="section-title">Portfolio Categories</h2>
             <div class="groups-display" id="groupsDisplay"></div>
             <div class="group-input-container">
-                <input type="text" class="group-input" id="groupInput" placeholder="Add category">
+                <input type="text" class="group-input" id="groupInput" placeholder="Add new category...">
                 <button class="add-group-btn" onclick="addGroup()">Add</button>
             </div>
         </div>
@@ -215,13 +215,28 @@
         function addGroup() {
             const input = document.getElementById('groupInput');
             const name = input.value.trim();
-            if (name && !groups.includes(name)) {
+
+            // Check for case-insensitive duplicates
+            const nameExists = groups.some(existingGroup =>
+                existingGroup.toLowerCase() === name.toLowerCase()
+            );
+
+            if (name && !nameExists) {
                 const colors = ['color-stocks', 'color-etfs', 'color-crypto', 'color-bonds', 'color-reits', 'color-commodities'];
                 groupColors[name] = colors[groups.length % colors.length];
                 groups.push(name);
                 input.value = '';
                 renderGroupTags();
                 updateDropdowns();
+            } else if (name && nameExists) {
+                // Show feedback that duplicate was rejected
+                input.value = '';
+                input.style.borderColor = '#dc2626';
+                input.placeholder = 'Category already exists';
+                setTimeout(() => {
+                    input.style.borderColor = '';
+                    input.placeholder = 'Add new category...';
+                }, 2000);
             }
         }
 
