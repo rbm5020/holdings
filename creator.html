@@ -465,7 +465,12 @@
                     }
 
                     // Clear existing rows
-                    const tableBody = document.querySelector('.holdings-table tbody');
+                    const tableBody = document.getElementById('spreadsheetBody');
+                    console.log('spreadsheetBody element:', tableBody);
+                    if (!tableBody) {
+                        console.error('spreadsheetBody not found!');
+                        throw new Error('Spreadsheet body element not found');
+                    }
                     tableBody.innerHTML = '';
 
                     // Load category order if available (backward compatibility)
