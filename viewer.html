@@ -611,7 +611,7 @@
                         e.stopPropagation();
                         toggleChangeDisplay();
 
-                        // 1ms "unclick" to remove any focus
+                        // 100ms phantom click to steal focus
                         setTimeout(() => {
                             this.blur();
                             document.activeElement.blur();
@@ -622,9 +622,9 @@
                             const phantomArea = document.querySelector('.header');
                             if (phantomArea) {
                                 phantomArea.focus();
-                                setTimeout(() => phantomArea.blur(), 1);
+                                setTimeout(() => phantomArea.blur(), 50);
                             }
-                        }, 1);
+                        }, 100);
                     });
 
                     element.addEventListener('touchstart', function(e) {
@@ -639,7 +639,7 @@
                         e.stopPropagation();
                         toggleChangeDisplay();
 
-                        // 1ms "unclick" for touch too
+                        // 100ms phantom click for touch too
                         setTimeout(() => {
                             this.blur();
                             document.activeElement.blur();
@@ -647,9 +647,9 @@
                             const phantomArea = document.querySelector('.header');
                             if (phantomArea) {
                                 phantomArea.focus();
-                                setTimeout(() => phantomArea.blur(), 1);
+                                setTimeout(() => phantomArea.blur(), 50);
                             }
-                        }, 1);
+                        }, 100);
                     });
                 });
             }
