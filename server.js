@@ -78,24 +78,40 @@ async function saveToExternalDB(id, portfolio) {
 
 async function getFromExternalDB(id) {
     try {
+        console.log(`🔍 getFromExternalDB called for ${id}`);
+        console.log(`🔧 SUPABASE_URL: ${process.env.SUPABASE_URL ? 'SET' : 'NOT SET'}`);
+        console.log(`🔧 SUPABASE_ANON_KEY: ${process.env.SUPABASE_ANON_KEY ? 'SET' : 'NOT SET'}`);
+
         if (!process.env.SUPABASE_URL) {
             console.log(`⚠️ No SUPABASE_URL configured - cannot retrieve portfolio ${id}`);
             return null;
         }
 
-        const response = await fetch(`${SUPABASE_URL}/rest/v1/portfolios?id=eq.${id}&select=data`, {
+        const url = `${SUPABASE_URL}/rest/v1/portfolios?id=eq.${id}&select=data`;
+        console.log(`🌐 Fetching from: ${url}`);
+
+        const response = await fetch(url, {
             headers: {
                 'apikey': SUPABASE_ANON_KEY,
                 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
             }
         });
 
+        console.log(`📡 Response status: ${response.status}`);
+
         if (response.ok) {
             const results = await response.json();
+            console.log(`📦 Response data:`, results);
+
             if (results && results.length > 0) {
                 console.log(`✅ Found portfolio ${id} in Supabase`);
                 return results[0].data;
+            } else {
+                console.log(`❌ Portfolio ${id} not found in Supabase results`);
             }
+        } else {
+            const errorText = await response.text();
+            console.log(`❌ Supabase error: ${response.status} - ${errorText}`);
         }
 
         console.log(`❌ Portfolio ${id} not found in Supabase`);
