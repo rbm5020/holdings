@@ -481,7 +481,10 @@ app.get('/api/edit/:id/:secret', async (req, res) => {
         const portfolio = await getPortfolio(id);
 
         if (!portfolio) {
-            return res.status(404).json({ error: 'Portfolio not found' });
+            console.log(`❌ Portfolio ${id} not found. Redis: ${!!redis}, Supabase: ${!!process.env.SUPABASE_URL}`);
+            return res.status(404).json({
+                error: 'Portfolio not found. This may be because persistence is not configured on this deployment.'
+            });
         }
 
         if (portfolio.editSecret !== secret) {
