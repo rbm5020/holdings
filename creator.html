@@ -448,7 +448,9 @@
             try {
                 console.log('Loading portfolio for edit:', portfolioId);
                 const response = await fetch(`/api/edit/${portfolioId}/${editSecret}`);
+                console.log('Response status:', response.status);
                 const result = await response.json();
+                console.log('API result:', result);
 
                 if (result.success) {
                     const portfolio = result.portfolio;
