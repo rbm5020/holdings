@@ -497,11 +497,24 @@ app.get('/api/portfolios/:id', async (req, res) => {
     // Track portfolio view
     await trackEvent('portfolio_viewed', { ip: req.ip });
 
-    // For fast loading, return portfolio structure immediately
-    // Frontend will call separate prices endpoint
+    // Fetch current stock prices
+    const tickers = portfolio.holdings.map(h => h.ticker);
+    const prices = await fetchStockPrices(tickers);
+
+    // Add price data to holdings
+    const enrichedHoldings = portfolio.holdings.map(holding => ({
+        ...holding,
+        currentPrice: prices[holding.ticker]?.price || 0,
+        change: prices[holding.ticker]?.change || 0,
+        changePercent: prices[holding.ticker]?.changePercent || 0,
+        totalValue: (prices[holding.ticker]?.price || 0) * parseFloat(holding.shares || 0),
+        priceError: prices[holding.ticker]?.error || null
+    }));
+
     res.json({
         ...portfolio,
-        fastLoading: true
+        holdings: enrichedHoldings,
+        prices: prices
     });
 });
 

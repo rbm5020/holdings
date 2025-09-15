@@ -231,40 +231,11 @@
                 portfolio = data;
                 processPortfolioData();
 
-                // Then load prices asynchronously for progressive enhancement
-                if (data.fastLoading) {
-                    loadPricesAsync(portfolioId);
-                }
-
             } catch (error) {
                 showError('Failed to load portfolio: ' + error.message);
             }
         }
 
-        async function loadPricesAsync(portfolioId) {
-            try {
-                const response = await fetch(`/api/portfolios/${portfolioId}/prices`);
-                const priceData = await response.json();
-
-                if (response.ok) {
-                    // Update portfolio holdings with price data
-                    portfolio.holdings = priceData.holdings;
-                    portfolio.prices = priceData.prices;
-
-                    // Re-render with prices
-                    updatePortfolioWithPrices();
-                }
-            } catch (error) {
-                console.error('Failed to load prices:', error);
-                // Portfolio still works without prices
-            }
-        }
-
-        function updatePortfolioWithPrices() {
-            // Update the display with fresh price data
-            renderHoldingsTable();
-            updateTotalCalculations();
-        }
 
         function processPortfolioData() {
             document.getElementById('loading').style.display = 'none';
