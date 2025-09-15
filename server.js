@@ -695,7 +695,14 @@ app.get('/api/validate-ticker/:ticker', async (req, res) => {
 
         if (category === 'crypto') {
             // Force crypto translation for crypto category
-            actualTicker = cryptoMap[ticker] || ticker + '-USD';
+            // Handle case where user already added -USD suffix
+            if (cryptoMap[ticker]) {
+                actualTicker = cryptoMap[ticker];
+            } else if (ticker.endsWith('-USD')) {
+                actualTicker = ticker; // User already added -USD, don't double it
+            } else {
+                actualTicker = ticker + '-USD';
+            }
         } else if (category && category !== 'crypto') {
             // For non-crypto categories, never apply crypto translation
             actualTicker = ticker;
