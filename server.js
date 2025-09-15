@@ -494,28 +494,48 @@ app.get('/api/portfolios/:id', async (req, res) => {
         return res.status(404).json({ error: 'Portfolio expired' });
     }
     
-    // Fetch current stock prices
-    const tickers = portfolio.holdings.map(h => h.ticker);
-    const prices = await fetchStockPrices(tickers);
-    
-    // Add price data to holdings
-    const enrichedHoldings = portfolio.holdings.map(holding => ({
-        ...holding,
-        currentPrice: prices[holding.ticker]?.price || 0,
-        change: prices[holding.ticker]?.change || 0,
-        changePercent: prices[holding.ticker]?.changePercent || 0,
-        totalValue: (prices[holding.ticker]?.price || 0) * holding.quantity,
-        priceError: prices[holding.ticker]?.error || null
-    }));
-
     // Track portfolio view
     await trackEvent('portfolio_viewed', { ip: req.ip });
 
+    // For fast loading, return portfolio structure immediately
+    // Frontend will call separate prices endpoint
     res.json({
         ...portfolio,
-        holdings: enrichedHoldings,
-        prices: prices
+        fastLoading: true
     });
+});
+
+// Fast prices endpoint - called after page loads
+app.get('/api/portfolios/:id/prices', async (req, res) => {
+    try {
+        const portfolio = await getPortfolio(req.params.id);
+
+        if (!portfolio) {
+            return res.status(404).json({ error: 'Portfolio not found' });
+        }
+
+        // Fetch current stock prices
+        const tickers = portfolio.holdings.map(h => h.ticker);
+        const prices = await fetchStockPrices(tickers);
+
+        // Add price data to holdings
+        const enrichedHoldings = portfolio.holdings.map(holding => ({
+            ...holding,
+            currentPrice: prices[holding.ticker]?.price || 0,
+            change: prices[holding.ticker]?.change || 0,
+            changePercent: prices[holding.ticker]?.changePercent || 0,
+            totalValue: (prices[holding.ticker]?.price || 0) * holding.quantity,
+            priceError: prices[holding.ticker]?.error || null
+        }));
+
+        res.json({
+            holdings: enrichedHoldings,
+            prices: prices
+        });
+    } catch (error) {
+        console.error('Prices fetch error:', error);
+        res.status(500).json({ error: 'Failed to fetch prices' });
+    }
 });
 
 // Edit validation endpoint for magic links

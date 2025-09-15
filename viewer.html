@@ -5,11 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Holdings.me - Portfolio Tracker</title>
 
-    <!-- Favicon and Home Screen Icons -->
-    <link rel="icon" type="image/x-icon" href="/favicon.ico">
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="192x192" href="/android-chrome-192x192.png">
-    <link rel="manifest" href="/site.webmanifest">
+    <!-- Performance: Preconnect to external APIs -->
+    <link rel="preconnect" href="https://query1.finance.yahoo.com">
+
+    <!-- Minimal favicon to avoid 404s -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📈</text></svg>">
     <meta name="theme-color" content="#007aff">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -219,20 +219,51 @@
             }
             
             try {
+                // Fast loading: Get portfolio structure immediately
                 const response = await fetch(`/api/portfolios/${portfolioId}`);
                 const data = await response.json();
-                
+
                 if (!response.ok) {
                     showError(data.error || 'Portfolio not found');
                     return;
                 }
-                
+
                 portfolio = data;
                 processPortfolioData();
-                
+
+                // Then load prices asynchronously for progressive enhancement
+                if (data.fastLoading) {
+                    loadPricesAsync(portfolioId);
+                }
+
             } catch (error) {
                 showError('Failed to load portfolio: ' + error.message);
             }
+        }
+
+        async function loadPricesAsync(portfolioId) {
+            try {
+                const response = await fetch(`/api/portfolios/${portfolioId}/prices`);
+                const priceData = await response.json();
+
+                if (response.ok) {
+                    // Update portfolio holdings with price data
+                    portfolio.holdings = priceData.holdings;
+                    portfolio.prices = priceData.prices;
+
+                    // Re-render with prices
+                    updatePortfolioWithPrices();
+                }
+            } catch (error) {
+                console.error('Failed to load prices:', error);
+                // Portfolio still works without prices
+            }
+        }
+
+        function updatePortfolioWithPrices() {
+            // Update the display with fresh price data
+            renderHoldingsTable();
+            updateTotalCalculations();
         }
 
         function processPortfolioData() {
