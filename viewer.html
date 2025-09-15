@@ -348,8 +348,8 @@
             let totalDailyChange = 0;
             
             allHoldings.forEach(holding => {
-                const value = holding.shares * holding.currentPrice;
-                const dailyChange = holding.shares * holding.dailyChange;
+                const value = holding.shares * (holding.currentPrice || 0);
+                const dailyChange = holding.shares * (holding.dailyChange || 0);
                 total += value;
                 totalDailyChange += dailyChange;
             });
@@ -389,8 +389,8 @@
                 let totalDailyChange = 0;
                 let totalValue = 0;
                 allHoldings.forEach(holding => {
-                    totalValue += holding.shares * holding.currentPrice;
-                    totalDailyChange += holding.shares * holding.dailyChange;
+                    totalValue += holding.shares * (holding.currentPrice || 0);
+                    totalDailyChange += holding.shares * (holding.dailyChange || 0);
                 });
 
                 const yesterdayValue = totalValue - totalDailyChange;
@@ -423,8 +423,8 @@
                 let categoryTotal = 0;
                 let categoryDailyChange = 0;
                 page.holdings.forEach(holding => {
-                    categoryTotal += holding.shares * holding.currentPrice;
-                    categoryDailyChange += holding.shares * holding.dailyChange;
+                    categoryTotal += holding.shares * (holding.currentPrice || 0);
+                    categoryDailyChange += holding.shares * (holding.dailyChange || 0);
                 });
                 
                 const yesterdayValue = categoryTotal - categoryDailyChange;
@@ -455,12 +455,12 @@
 
             // Add actual holdings
             holdings.forEach(holding => {
-                const dailyChange = holding.shares * holding.dailyChange;
+                const dailyChange = holding.shares * (holding.dailyChange || 0);
                 rows.push(`
                     <tr>
                         <td style="font-weight: 600;">${holding.ticker}</td>
-                        <td style="text-align: right; font-weight: 500;">${formatDollarAmount(holding.currentPrice)}</td>
-                        <td style="text-align: right; font-weight: 500;" class="${holding.dailyChange >= 0 ? 'positive' : 'negative'}">${holding.dailyChange >= 0 ? '+' : ''}${formatDailyChange(holding.dailyChange).substring(1)}</td>
+                        <td style="text-align: right; font-weight: 500;">${formatDollarAmount(holding.currentPrice || 0)}</td>
+                        <td style="text-align: right; font-weight: 500;" class="${(holding.dailyChange || 0) >= 0 ? 'positive' : 'negative'}">${(holding.dailyChange || 0) >= 0 ? '+' : ''}${formatDailyChange(holding.dailyChange || 0).substring(1)}</td>
                         <td style="text-align: right; font-weight: 600;" class="${dailyChange >= 0 ? 'positive' : 'negative'}">${formatDailyChange(Math.abs(dailyChange))}</td>
                     </tr>
                 `);
