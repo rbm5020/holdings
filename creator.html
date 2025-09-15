@@ -101,7 +101,7 @@
         .delete-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(255, 107, 107, 0.4); }
         .row-delete { background: #ff3b30; color: white; border: none; border-radius: 4px; width: 24px; height: 24px; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
         .row-delete:hover { background: #d70015; }
-        .drag-handle-row { cursor: move; color: #9ca3af; font-size: 12px; user-select: none; margin-right: 8px; }
+        .drag-handle-row { cursor: move; color: #9ca3af; font-size: 12px; user-select: none; margin-right: 8px; padding: 4px; }
         .spreadsheet-row.dragging { opacity: 0.5; }
         .spreadsheet-row { transition: all 0.2s ease; }
         .info-icon { color: #6b7280; cursor: pointer; margin-left: 6px; font-size: 14px; font-weight: normal; position: relative; }
@@ -292,7 +292,6 @@
             const container = document.getElementById('spreadsheetBody');
             const row = document.createElement('div');
             row.className = 'spreadsheet-row';
-            row.draggable = true;
 
             // Real tickers in alphabetical order
             const alphabetTickers = [
@@ -328,28 +327,32 @@
             addRowDragHandlers(row);
         }
 
-        // Simple drag and drop for holdings rows
+        // Simplified drag and drop for holdings rows
         function addRowDragHandlers(row) {
-            let draggedElement = null;
+            const dragHandle = row.querySelector('.drag-handle-row');
+
+            dragHandle.addEventListener('mousedown', () => {
+                row.draggable = true;
+            });
 
             row.addEventListener('dragstart', (e) => {
-                // Only allow drag from drag handle
-                if (!e.target.classList.contains('drag-handle-row')) {
-                    e.preventDefault();
-                    return;
-                }
-                draggedElement = row;
                 row.classList.add('dragging');
                 e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/html', row.outerHTML);
             });
 
             row.addEventListener('dragend', () => {
                 row.classList.remove('dragging');
-                draggedElement = null;
+                row.draggable = false;
             });
 
             row.addEventListener('dragover', (e) => {
                 e.preventDefault();
+            });
+
+            row.addEventListener('drop', (e) => {
+                e.preventDefault();
+                const draggedElement = document.querySelector('.dragging');
                 if (draggedElement && draggedElement !== row) {
                     const container = document.getElementById('spreadsheetBody');
                     const rect = row.getBoundingClientRect();
