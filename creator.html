@@ -332,11 +332,15 @@
         function addRowDragHandlers(row) {
             const dragHandle = row.querySelector('.drag-handle-row');
 
-            dragHandle.addEventListener('mousedown', () => {
-                row.draggable = true;
-            });
+            // Make row draggable by default
+            row.draggable = true;
 
             row.addEventListener('dragstart', (e) => {
+                // Only allow dragging when starting from the drag handle
+                if (!e.target.classList.contains('drag-handle-row')) {
+                    e.preventDefault();
+                    return false;
+                }
                 row.classList.add('dragging');
                 e.dataTransfer.effectAllowed = 'move';
                 e.dataTransfer.setData('text/html', row.outerHTML);
@@ -344,7 +348,6 @@
 
             row.addEventListener('dragend', () => {
                 row.classList.remove('dragging');
-                row.draggable = false;
             });
 
             row.addEventListener('dragover', (e) => {
