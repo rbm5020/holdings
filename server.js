@@ -524,7 +524,7 @@ app.get('/api/portfolios/:id/prices', async (req, res) => {
             currentPrice: prices[holding.ticker]?.price || 0,
             change: prices[holding.ticker]?.change || 0,
             changePercent: prices[holding.ticker]?.changePercent || 0,
-            totalValue: (prices[holding.ticker]?.price || 0) * holding.quantity,
+            totalValue: (prices[holding.ticker]?.price || 0) * parseFloat(holding.shares || 0),
             priceError: prices[holding.ticker]?.error || null
         }));
 
