@@ -385,7 +385,7 @@
 
         async function createPortfolio() {
             // Check if all tickers are valid before proceeding
-            if (!areAllTickersValid()) {
+            if (!(await areAllTickersValid())) {
                 alert('Please fix invalid tickers (red borders) before creating your portfolio');
                 return;
             }
@@ -452,16 +452,8 @@
             input.classList.remove('valid', 'invalid');
 
             try {
-                // Get the category from the same row for context-aware validation
-                const row = input.closest('.spreadsheet-row');
-                const categorySelect = row?.querySelector('select[name="category"]');
-                const category = categorySelect?.value || '';
-
-                let url = `/api/validate-ticker/${encodeURIComponent(ticker)}`;
-                if (category) {
-                    url += `?category=${encodeURIComponent(category)}`;
-                }
-
+                // Simple ticker validation - no category context needed
+                const url = `/api/validate-ticker/${encodeURIComponent(ticker)}`;
                 const response = await fetch(url);
                 const result = await response.json();
 
@@ -510,14 +502,52 @@
             });
         }
 
-        function areAllTickersValid() {
+        async function areAllTickersValid() {
             const tickerInputs = document.querySelectorAll('.ticker-input');
             let hasAnyTickers = false;
 
+            // Wait for all pending validations to complete
+            const pendingValidations = [];
             for (const input of tickerInputs) {
                 const ticker = input.value.trim();
                 if (ticker) {
                     hasAnyTickers = true;
+
+                    // If there's a pending timeout, wait for it
+                    if (validationTimeouts.has(input)) {
+                        const promise = new Promise(resolve => {
+                            const originalTimeout = validationTimeouts.get(input);
+                            clearTimeout(originalTimeout);
+
+                            // Trigger validation immediately and wait for it
+                            validateTicker(input, ticker).then(resolve);
+                        });
+                        pendingValidations.push(promise);
+                    }
+                    // If currently validating, wait for it to finish
+                    else if (input.classList.contains('validating')) {
+                        const promise = new Promise(resolve => {
+                            const checkInterval = setInterval(() => {
+                                if (!input.classList.contains('validating')) {
+                                    clearInterval(checkInterval);
+                                    resolve();
+                                }
+                            }, 50);
+                        });
+                        pendingValidations.push(promise);
+                    }
+                }
+            }
+
+            // Wait for all pending validations
+            if (pendingValidations.length > 0) {
+                await Promise.all(pendingValidations);
+            }
+
+            // Now check if all are valid
+            for (const input of tickerInputs) {
+                const ticker = input.value.trim();
+                if (ticker) {
                     if (!input.classList.contains('valid')) {
                         return false;
                     }
@@ -748,7 +778,7 @@
 
         async function updatePortfolio() {
             // Check if all tickers are valid before proceeding
-            if (!areAllTickersValid()) {
+            if (!(await areAllTickersValid())) {
                 alert('Please fix invalid tickers (red borders) before updating your portfolio');
                 return;
             }
@@ -817,16 +847,23 @@
         // Ticker help function
         function showTickerHelp() {
             alert(
-                '📈 Ticker Symbol Help\n\n' +
-                '• STOCKS: Use standard symbols (AAPL, GOOGL, TSLA)\n' +
-                '• CRYPTO: Use coin names (BTC, ETH, SOL, AAVE, LINK)\n' +
-                '  Format: BTC-USD, ETH-USD (we add -USD automatically)\n' +
-                '• ETFs: Use full symbols (SPY, QQQ, VTI)\n\n' +
-                '💡 SMART VALIDATION:\n' +
-                '  - Select the correct category first for accurate validation\n' +
-                '  - If category is "Crypto", we\'ll automatically add -USD\n' +
-                '  - Set quantity to 0 to create a watchlist\n\n' +
-                '✨ This solves conflicts like BTC (Bitcoin vs. stock) - just select the right category!'
+                '📈 TICKER SYMBOL EXAMPLES\n\n' +
+                '✅ CORRECT EXAMPLES:\n' +
+                '• Apple stock: AAPL\n' +
+                '• Tesla stock: TSLA\n' +
+                '• S&P 500 ETF: SPY\n' +
+                '• Bitcoin: BTC-USD\n' +
+                '• Ethereum: ETH-USD\n' +
+                '• Solana: SOL-USD\n\n' +
+                '❌ WRONG EXAMPLES:\n' +
+                '• BTC (missing -USD)\n' +
+                '• ETH (missing -USD)\n' +
+                '• btc-usd (wrong case)\n\n' +
+                '🔑 KEY RULES:\n' +
+                '• Stocks/ETFs: Just the symbol (AAPL, SPY)\n' +
+                '• Crypto: Always add -USD (BTC-USD, ETH-USD)\n' +
+                '• Use UPPERCASE for everything\n' +
+                '• Enter exactly what Yahoo Finance uses'
             );
         }
 
