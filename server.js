@@ -419,7 +419,7 @@ async function fetchStockPrices(tickers) {
 // Routes
 app.post('/api/portfolios', async (req, res) => {
     try {
-        const { holdings, categories, categoryOrder, duration, email } = req.body;
+        const { holdings, categories, categoryOrder, duration = 'Forever', email } = req.body;
         
         const id = generateId();
         const editSecret = generateEditSecret();
