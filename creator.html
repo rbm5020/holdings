@@ -332,22 +332,20 @@
         function addRowDragHandlers(row) {
             const dragHandle = row.querySelector('.drag-handle-row');
 
-            // Make row draggable by default
-            row.draggable = true;
+            // Make the drag handle itself draggable
+            dragHandle.draggable = true;
 
-            row.addEventListener('dragstart', (e) => {
-                // Only allow dragging when starting from the drag handle
-                if (!e.target.classList.contains('drag-handle-row')) {
-                    e.preventDefault();
-                    return false;
-                }
+            dragHandle.addEventListener('dragstart', (e) => {
                 row.classList.add('dragging');
                 e.dataTransfer.effectAllowed = 'move';
                 e.dataTransfer.setData('text/html', row.outerHTML);
+                // Store reference to the row being dragged
+                window.draggedRow = row;
             });
 
-            row.addEventListener('dragend', () => {
+            dragHandle.addEventListener('dragend', () => {
                 row.classList.remove('dragging');
+                window.draggedRow = null;
             });
 
             row.addEventListener('dragover', (e) => {
@@ -356,7 +354,7 @@
 
             row.addEventListener('drop', (e) => {
                 e.preventDefault();
-                const draggedElement = document.querySelector('.dragging');
+                const draggedElement = window.draggedRow;
                 if (draggedElement && draggedElement !== row) {
                     const container = document.getElementById('spreadsheetBody');
                     const rect = row.getBoundingClientRect();
