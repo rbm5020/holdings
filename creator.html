@@ -477,7 +477,16 @@
 
         function setupTickerValidation(input) {
             input.addEventListener('input', (e) => {
-                const ticker = e.target.value.trim().toUpperCase();
+                const originalValue = e.target.value.trim();
+                const ticker = originalValue.toUpperCase();
+
+                // Auto-uppercase the input value as user types
+                if (originalValue !== ticker) {
+                    const cursorPosition = e.target.selectionStart;
+                    e.target.value = ticker;
+                    // Restore cursor position after uppercase conversion
+                    e.target.setSelectionRange(cursorPosition, cursorPosition);
+                }
 
                 // Clear previous timeout
                 if (validationTimeouts.has(input)) {
@@ -858,11 +867,11 @@
                 '❌ WRONG EXAMPLES:\n' +
                 '• BTC (missing -USD)\n' +
                 '• ETH (missing -USD)\n' +
-                '• btc-usd (wrong case)\n\n' +
+                '• bitcoin-usd (use BTC-USD instead)\n\n' +
                 '🔑 KEY RULES:\n' +
                 '• Stocks/ETFs: Just the symbol (AAPL, SPY)\n' +
                 '• Crypto: Always add -USD (BTC-USD, ETH-USD)\n' +
-                '• Use UPPERCASE for everything\n' +
+                '• Uppercase/lowercase both work (auto-converted)\n' +
                 '• Enter exactly what Yahoo Finance uses'
             );
         }
