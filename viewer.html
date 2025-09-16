@@ -232,7 +232,18 @@
                 processPortfolioData();
 
             } catch (error) {
-                showError('Failed to load portfolio: ' + error.message);
+                console.error('Portfolio loading error:', error);
+
+                let errorMessage = error.message;
+                if (error.message.includes('fetch') || error.message.includes('Failed to fetch')) {
+                    errorMessage = 'Network error. Please check your connection and try again.';
+                } else if (error.message.includes('Server error: 5')) {
+                    errorMessage = 'Server is temporarily unavailable. Please try again in a moment.';
+                } else if (error.message.includes('404')) {
+                    errorMessage = 'Portfolio not found. The link may be invalid or expired.';
+                }
+
+                showError('Failed to load portfolio: ' + errorMessage);
             }
         }
 

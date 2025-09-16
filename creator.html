@@ -16,6 +16,7 @@
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f7; color: #333; }
         @media (prefers-color-scheme: dark) { body { background: #1a1a1a; color: #f9fafb; } }
         .container { max-width: 900px; margin: 0 auto; padding: 16px; }
+        @media (max-width: 640px) { .container { padding: 8px; } }
         
         .branding { text-align: center; margin-bottom: 32px; padding: 20px 0; border-bottom: 1px solid #e2e8f0; }
         @media (prefers-color-scheme: dark) { .branding { border-bottom-color: #374151; } }
@@ -35,6 +36,7 @@
         @media (prefers-color-scheme: dark) { .page-title { color: #f9fafb; } }
         .form-section { background: white; border-radius: 12px; padding: 24px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
         @media (prefers-color-scheme: dark) { .form-section { background: #2a2a2a; } }
+        @media (max-width: 640px) { .form-section { padding: 16px; margin-bottom: 16px; } }
         .section-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 15px; }
         @media (prefers-color-scheme: dark) { .section-title { color: #f9fafb; } }
         .section-subtitle { font-size: 0.9rem; color: #6b7280; margin-bottom: 20px; }
@@ -414,7 +416,18 @@
                     alert('Error creating portfolio: ' + result.error);
                 }
             } catch (error) {
-                alert('Error creating portfolio: ' + error.message);
+                console.error('Portfolio creation error:', error);
+
+                let errorMessage = error.message;
+                if (error.message.includes('fetch')) {
+                    errorMessage = 'Network error. Please check your connection and try again.';
+                } else if (error.message.includes('Server error: 5')) {
+                    errorMessage = 'Server is temporarily unavailable. Please try again in a moment.';
+                } else if (error.message.includes('Failed to fetch')) {
+                    errorMessage = 'Unable to connect to server. Please check your internet connection.';
+                }
+
+                alert('Error creating portfolio: ' + errorMessage);
             }
         }
 
@@ -767,7 +780,16 @@
                     alert('Error updating portfolio: ' + result.error);
                 }
             } catch (error) {
-                alert('Error updating portfolio: ' + error.message);
+                console.error('Portfolio update error:', error);
+
+                let errorMessage = error.message;
+                if (error.message.includes('fetch') || error.message.includes('Failed to fetch')) {
+                    errorMessage = 'Network error. Please check your connection and try again.';
+                } else if (error.message.includes('Server error: 5')) {
+                    errorMessage = 'Server is temporarily unavailable. Please try again in a moment.';
+                }
+
+                alert('Error updating portfolio: ' + errorMessage);
             }
         }
 
@@ -843,7 +865,16 @@
                     deleteButton.disabled = false;
                 }
             } catch (error) {
-                alert('Error deleting portfolio: ' + error.message);
+                console.error('Portfolio deletion error:', error);
+
+                let errorMessage = error.message;
+                if (error.message.includes('fetch') || error.message.includes('Failed to fetch')) {
+                    errorMessage = 'Network error. Please check your connection and try again.';
+                } else if (error.message.includes('Server error: 5')) {
+                    errorMessage = 'Server is temporarily unavailable. Please try again in a moment.';
+                }
+
+                alert('Error deleting portfolio: ' + errorMessage);
                 const deleteButton = document.getElementById('deleteBtn');
                 deleteButton.textContent = 'Delete Portfolio';
                 deleteButton.disabled = false;
