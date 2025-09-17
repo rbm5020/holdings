@@ -26,15 +26,21 @@ export default function handler(req, res) {
             });
 
         } else if (req.method === 'GET') {
-            // Mock portfolio data for viewing
+            // Handle portfolio viewing by ID
+            const portfolioId = req.query.portfolioId || req.url.split('/').pop();
+
+            if (!portfolioId) {
+                return res.status(400).json({ error: 'Portfolio ID required' });
+            }
+
+            // Mock portfolio data for viewing - will replace with real data later
             return res.status(200).json({
-                success: true,
-                portfolio: {
-                    holdings: [
-                        { ticker: 'AAPL', quantity: 10, currentPrice: 150, change: 2.5 },
-                        { ticker: 'BTC-USD', quantity: 0.5, currentPrice: 45000, change: -500 }
-                    ]
-                }
+                holdings: [
+                    { ticker: 'AAPL', quantity: 10, currentPrice: 150, change: 2.5, category: 'Stocks' },
+                    { ticker: 'BTC-USD', quantity: 0.5, currentPrice: 45000, change: -500, category: 'Crypto' }
+                ],
+                categories: { 'Stocks': 'color-stocks', 'Crypto': 'color-crypto' },
+                categoryOrder: ['Stocks', 'Crypto']
             });
 
         } else {
