@@ -1,27 +1,17 @@
 {
   "version": 2,
-  "builds": [
+  "rewrites": [
     {
-      "src": "server.js",
-      "use": "@vercel/node"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "/server.js"
+      "source": "/",
+      "destination": "/creator.html"
     },
     {
-      "src": "/p/(.*)",
-      "dest": "/server.js"
+      "source": "/view/:id",
+      "destination": "/viewer.html"
     },
     {
-      "src": "/",
-      "dest": "/server.js"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/server.js"
+      "source": "/edit/:id/:secret",
+      "destination": "/creator.html"
     }
   ]
 }
