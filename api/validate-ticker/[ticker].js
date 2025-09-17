@@ -21,7 +21,7 @@ export default function handler(req, res) {
 
         // Real ticker validation against market data
         const tickerUpper = ticker.toUpperCase();
-        const isValid = await validateAgainstMarketData(tickerUpper);
+        const isValid = validateAgainstMarketData(tickerUpper);
 
         return res.status(200).json({
             valid: isValid,
@@ -34,7 +34,7 @@ export default function handler(req, res) {
     }
 }
 
-async function validateAgainstMarketData(ticker) {
+function validateAgainstMarketData(ticker) {
     try {
         // For now, use a simple whitelist of known good tickers while debugging
         const knownTickers = [
