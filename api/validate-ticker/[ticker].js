@@ -1,4 +1,4 @@
-export default function handler(req, res) {
+export default async function handler(req, res) {
     // Enable CORS
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
@@ -21,7 +21,7 @@ export default function handler(req, res) {
 
         // Real ticker validation against market data
         const tickerUpper = ticker.toUpperCase();
-        const isValid = validateAgainstMarketData(tickerUpper);
+        const isValid = await validateAgainstMarketData(tickerUpper);
 
         return res.status(200).json({
             valid: isValid,
@@ -34,31 +34,56 @@ export default function handler(req, res) {
     }
 }
 
-function validateAgainstMarketData(ticker) {
+async function validateAgainstMarketData(ticker) {
     try {
-        // For now, use a simple whitelist of known good tickers while debugging
-        const knownTickers = [
-            // Major Tech Stocks
-            'AAPL', 'GOOGL', 'GOOG', 'MSFT', 'AMZN', 'TSLA', 'META', 'NVDA', 'NFLX', 'UBER', 'CRM', 'ORCL', 'ADBE', 'NOW', 'PLTR',
-            // Other Popular Stocks
-            'SPY', 'QQQ', 'VTI', 'VOO', 'BB', 'GME', 'AMC', 'MEME', 'COIN', 'RBLX', 'SNOW', 'CRWD', 'ZM', 'SHOP', 'SQ', 'PYPL',
-            'JPM', 'BAC', 'WFC', 'GS', 'MS', 'V', 'MA', 'DIS', 'KO', 'PEP', 'WMT', 'TGT', 'HD', 'LOW', 'NKE', 'LULU',
-            'JNJ', 'PFE', 'UNH', 'ABBV', 'LLY', 'XOM', 'CVX', 'T', 'VZ', 'INTC', 'AMD', 'MU', 'QCOM',
-            // Major Crypto
-            'BTC-USD', 'ETH-USD', 'SOL-USD', 'ADA-USD', 'DOGE-USD', 'MATIC-USD', 'AVAX-USD', 'DOT-USD', 'LINK-USD', 'UNI-USD'
-        ];
+        // Use Yahoo Finance search API to validate any ticker
+        const searchUrl = `https://query1.finance.yahoo.com/v1/finance/search?q=${encodeURIComponent(ticker)}`;
 
-        return knownTickers.includes(ticker.toUpperCase());
+        const response = await fetch(searchUrl, {
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            }
+        });
 
-        // TODO: Re-enable Yahoo Finance API once we debug why it's failing
-        // const url = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}`;
-        // const response = await fetch(url);
-        // ...
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        // Check if ticker exists in search results
+        if (data.quotes && data.quotes.length > 0) {
+            // Look for exact symbol match
+            const exactMatch = data.quotes.find(quote =>
+                quote.symbol && quote.symbol.toUpperCase() === ticker.toUpperCase()
+            );
+
+            if (exactMatch) {
+                return true;
+            }
+
+            // If no exact match, check if any result is close enough
+            const closeMatch = data.quotes.find(quote => {
+                if (!quote.symbol) return false;
+                const symbol = quote.symbol.toUpperCase();
+                const tickerUpper = ticker.toUpperCase();
+
+                // Handle common variations
+                return symbol === tickerUpper ||
+                       symbol === tickerUpper + '.TO' || // Canadian stocks
+                       symbol === tickerUpper + '.L' ||  // London stocks
+                       symbol.replace(/[\.\-].*$/, '') === tickerUpper; // Strip suffixes
+            });
+
+            return !!closeMatch;
+        }
+
+        return false;
 
     } catch (error) {
-        console.error('Market data validation error:', error);
+        console.error('Yahoo Finance validation error:', error);
 
-        // Fallback: Basic format check if API fails
-        return /^[A-Z]{1,5}(-USD)?(\.[A-Z]{1,3})?$/.test(ticker);
+        // Fallback: Accept reasonable format if API fails
+        return /^[A-Z]{1,8}(-USD|\.TO|\.L)?$/i.test(ticker);
     }
 }
