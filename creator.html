@@ -309,7 +309,7 @@
                     <span class="drag-handle-row">⋮⋮</span>
                     <input class="cell-input ticker-input" placeholder="${placeholderTicker}" value="${data.ticker || ''}" style="text-align: left;">
                 </div>
-                <div class="spreadsheet-cell"><input class="cell-input" type="number" placeholder="100" value="${data.shares || ''}" style="text-align: center;"></div>
+                <div class="spreadsheet-cell"><input class="cell-input" type="number" min="0" step="0.001" placeholder="100" value="${data.shares || ''}" style="text-align: center;"></div>
                 <div class="spreadsheet-cell" style="position:relative; justify-content: center;">
                     <div class="category-dot ${data.group ? groupColors[data.group] || 'color-none' : 'color-none'}" onclick="this.nextElementSibling.click()"></div>
                     <select class="category-select" onchange="updateCategoryDot(this)" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:24px;height:24px;opacity:0;cursor:pointer;border-radius:50%;">
