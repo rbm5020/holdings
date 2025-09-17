@@ -28,6 +28,20 @@
             body { background: #1a1a1a; color: #e5e5e7; }
         }
 
+        .branding { text-align: center; margin-bottom: 30px; padding: 20px 0; border-bottom: 1px solid #e2e8f0; }
+        @media (prefers-color-scheme: dark) { .branding { border-bottom-color: #374151; } }
+        .logo-container { display: inline-flex; align-items: center; justify-content: center; background: rgba(15, 23, 42, 0.04); padding: 16px 24px; border-radius: 16px; margin-bottom: 10px; border: 1px solid rgba(15, 23, 42, 0.08); }
+        @media (prefers-color-scheme: dark) { .logo-container { background: rgba(59, 130, 246, 0.1); border-color: rgba(59, 130, 246, 0.2); } }
+        .logo-icon { width: 32px; height: 32px; background: linear-gradient(135deg, #1e40af 0%, #3730a3 100%); border-radius: 50%; margin-right: 12px; position: relative; }
+        .logo-icon::before { content: ''; position: absolute; width: 16px; height: 3px; background: white; border-radius: 1px; top: 8px; left: 50%; transform: translateX(-50%); }
+        .logo-icon::after { content: ''; position: absolute; width: 12px; height: 3px; background: rgba(255,255,255,0.7); border-radius: 1px; top: 15px; left: 50%; transform: translateX(-50%); }
+        .chart-line { position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); width: 8px; height: 3px; background: rgba(255,255,255,0.4); border-radius: 1px; }
+        .logo { font-size: 1.75rem; font-weight: 800; color: #0f172a; letter-spacing: -0.5px; }
+        .domain { font-size: 1.75rem; font-weight: 400; color: #64748b; letter-spacing: -0.5px; }
+        @media (prefers-color-scheme: dark) { .logo { color: #f8fafc; } }
+        .tagline { font-size: 0.875rem; color: #64748b; font-weight: 500; letter-spacing: 0.025em; margin-bottom: 8px; }
+        @media (prefers-color-scheme: dark) { .tagline { color: #94a3b8; } }
+
         .container {
             max-width: 600px;
             width: 100%;
@@ -222,6 +236,14 @@
 </head>
 <body>
     <div class="container">
+        <div class="branding">
+            <div class="logo-container">
+                <div class="logo-icon"><div class="chart-line"></div></div>
+                <span class="logo">Holdings</span><span class="domain">.me</span>
+            </div>
+            <div class="tagline">Portfolio snapshot, simplified</div>
+        </div>
+
         <div class="success-icon">🎉</div>
         <h1>Portfolio Created!</h1>
 
