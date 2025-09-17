@@ -10,9 +10,28 @@ export default function handler(req, res) {
 
     try {
         if (req.method === 'POST') {
-            // Create new portfolio - simple mock for now
+            // Create new portfolio with actual form data
+            const portfolioData = req.body;
             const portfolioId = Math.random().toString(36).substring(2, 12);
             const editSecret = Math.random().toString(36).substring(2, 22);
+
+            // Store the portfolio data (in-memory for now)
+            const portfolio = {
+                id: portfolioId,
+                editSecret,
+                holdings: portfolioData.holdings || [],
+                categories: portfolioData.categories || {},
+                categoryOrder: portfolioData.categoryOrder || [],
+                duration: portfolioData.duration || 'Forever',
+                email: portfolioData.email,
+                createdAt: new Date().toISOString()
+            };
+
+            // Use global storage
+            if (!global.portfolios) {
+                global.portfolios = new Map();
+            }
+            global.portfolios.set(portfolioId, portfolio);
 
             const baseUrl = `https://${req.headers.host}`;
             const viewUrl = `${baseUrl}/view/${portfolioId}`;

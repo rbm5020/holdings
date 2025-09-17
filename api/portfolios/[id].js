@@ -19,19 +19,24 @@ export default async function handler(req, res) {
             return res.status(400).json({ error: 'Portfolio ID required' });
         }
 
-        // Get real-time prices for mock portfolio
-        const mockHoldings = [
-            { ticker: 'AAPL', quantity: 10, category: 'Stocks' },
-            { ticker: 'BTC-USD', quantity: 0.5, category: 'Crypto' },
-            { ticker: 'GOOGL', quantity: 5, category: 'Stocks' }
-        ];
+        // Load actual portfolio data from storage
+        if (!global.portfolios) {
+            global.portfolios = new Map();
+        }
 
-        const holdingsWithPrices = await fetchRealTimePrices(mockHoldings);
+        const portfolio = global.portfolios.get(id);
+
+        if (!portfolio) {
+            return res.status(404).json({ error: 'Portfolio not found' });
+        }
+
+        // Get real-time prices for the actual portfolio holdings
+        const holdingsWithPrices = await fetchRealTimePrices(portfolio.holdings);
 
         return res.status(200).json({
             holdings: holdingsWithPrices,
-            categories: { 'Stocks': 'color-stocks', 'Crypto': 'color-crypto' },
-            categoryOrder: ['Stocks', 'Crypto']
+            categories: portfolio.categories || {},
+            categoryOrder: portfolio.categoryOrder || []
         });
 
     } catch (error) {
