@@ -35,12 +35,18 @@ export default function handler(req, res) {
 }
 
 function isValidTickerFormat(ticker) {
-    // Basic validation rules
+    // Stricter validation rules
     if (!ticker || ticker.length < 1 || ticker.length > 10) {
         return false;
     }
 
-    // Allow letters, numbers, hyphens, dots
-    const tickerRegex = /^[A-Z0-9\-\.]+$/;
-    return tickerRegex.test(ticker);
+    // Valid ticker patterns
+    const validPatterns = [
+        /^[A-Z]{1,5}$/, // Standard stocks (AAPL, GOOGL, TSLA, etc)
+        /^[A-Z]{1,5}-USD$/, // Crypto (BTC-USD, ETH-USD)
+        /^[A-Z]{1,5}\.[A-Z]{1,3}$/, // International (TSM.TO, SAP.DE)
+        /^[A-Z]{1,4}[0-9]{1,2}$/, // Some special tickers (BRK.A represented as BRKA)
+    ];
+
+    return validPatterns.some(pattern => pattern.test(ticker));
 }
