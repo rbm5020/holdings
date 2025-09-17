@@ -38,8 +38,14 @@ function validateAgainstMarketData(ticker) {
     try {
         // For now, use a simple whitelist of known good tickers while debugging
         const knownTickers = [
-            'AAPL', 'GOOGL', 'MSFT', 'AMZN', 'TSLA', 'META', 'NVDA', 'NFLX', 'UBER', 'SPY', 'QQQ', 'VTI',
-            'BTC-USD', 'ETH-USD', 'SOL-USD', 'ADA-USD', 'DOGE-USD', 'MATIC-USD', 'AVAX-USD'
+            // Major Tech Stocks
+            'AAPL', 'GOOGL', 'GOOG', 'MSFT', 'AMZN', 'TSLA', 'META', 'NVDA', 'NFLX', 'UBER', 'CRM', 'ORCL', 'ADBE', 'NOW', 'PLTR',
+            // Other Popular Stocks
+            'SPY', 'QQQ', 'VTI', 'VOO', 'BB', 'GME', 'AMC', 'MEME', 'COIN', 'RBLX', 'SNOW', 'CRWD', 'ZM', 'SHOP', 'SQ', 'PYPL',
+            'JPM', 'BAC', 'WFC', 'GS', 'MS', 'V', 'MA', 'DIS', 'KO', 'PEP', 'WMT', 'TGT', 'HD', 'LOW', 'NKE', 'LULU',
+            'JNJ', 'PFE', 'UNH', 'ABBV', 'LLY', 'XOM', 'CVX', 'T', 'VZ', 'INTC', 'AMD', 'MU', 'QCOM',
+            // Major Crypto
+            'BTC-USD', 'ETH-USD', 'SOL-USD', 'ADA-USD', 'DOGE-USD', 'MATIC-USD', 'AVAX-USD', 'DOT-USD', 'LINK-USD', 'UNI-USD'
         ];
 
         return knownTickers.includes(ticker.toUpperCase());
