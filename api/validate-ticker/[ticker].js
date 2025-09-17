@@ -19,9 +19,9 @@ export default function handler(req, res) {
             return res.status(400).json({ error: 'Ticker required' });
         }
 
-        // Basic format validation for now
+        // Real ticker validation against market data
         const tickerUpper = ticker.toUpperCase();
-        const isValid = isValidTickerFormat(tickerUpper);
+        const isValid = await validateAgainstMarketData(tickerUpper);
 
         return res.status(200).json({
             valid: isValid,
@@ -34,19 +34,43 @@ export default function handler(req, res) {
     }
 }
 
-function isValidTickerFormat(ticker) {
-    // Stricter validation rules
-    if (!ticker || ticker.length < 1 || ticker.length > 10) {
+async function validateAgainstMarketData(ticker) {
+    try {
+        // Use Yahoo Finance API to check if ticker exists
+        const url = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}`;
+
+        const response = await fetch(url, {
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+            }
+        });
+
+        if (!response.ok) {
+            return false;
+        }
+
+        const data = await response.json();
+
+        // Check if ticker exists and has valid data
+        if (data.chart && data.chart.result && data.chart.result.length > 0) {
+            const result = data.chart.result[0];
+
+            // Verify the ticker symbol matches what we requested
+            if (result.meta && result.meta.symbol) {
+                const returnedSymbol = result.meta.symbol.toUpperCase();
+                const requestedSymbol = ticker.toUpperCase();
+
+                // Exact match or known variations
+                return returnedSymbol === requestedSymbol;
+            }
+        }
+
         return false;
+
+    } catch (error) {
+        console.error('Market data validation error:', error);
+
+        // Fallback: Basic format check if API fails
+        return /^[A-Z]{1,5}(-USD)?(\.[A-Z]{1,3})?$/.test(ticker);
     }
-
-    // Valid ticker patterns
-    const validPatterns = [
-        /^[A-Z]{1,5}$/, // Standard stocks (AAPL, GOOGL, TSLA, etc)
-        /^[A-Z]{1,5}-USD$/, // Crypto (BTC-USD, ETH-USD)
-        /^[A-Z]{1,5}\.[A-Z]{1,3}$/, // International (TSM.TO, SAP.DE)
-        /^[A-Z]{1,4}[0-9]{1,2}$/, // Some special tickers (BRK.A represented as BRKA)
-    ];
-
-    return validPatterns.some(pattern => pattern.test(ticker));
 }
