@@ -74,8 +74,13 @@ module.exports = async function handler(req, res) {
                 return res.status(404).json({ error: 'Portfolio expired' });
             }
 
-            // Fetch current prices for all holdings
-            const holdingsWithPrices = await fetchCurrentPrices(portfolio.holdings);
+            // For now, return holdings with mock prices
+            const holdingsWithPrices = portfolio.holdings.map(holding => ({
+                ...holding,
+                currentPrice: Math.random() * 1000 + 10,
+                change: (Math.random() - 0.5) * 20,
+                quantity: holding.quantity || 0
+            }));
 
             return res.status(200).json({
                 success: true,
@@ -111,12 +116,4 @@ function calculateExpirationDate(duration) {
     }
 }
 
-async function fetchCurrentPrices(holdings) {
-    // For now, return mock data - will implement real price fetching later
-    return holdings.map(holding => ({
-        ...holding,
-        currentPrice: Math.random() * 1000 + 10, // Mock price
-        change: (Math.random() - 0.5) * 20, // Mock daily change
-        quantity: holding.quantity || 0
-    }));
-}
+// Removed fetchCurrentPrices function - using inline mock data for now

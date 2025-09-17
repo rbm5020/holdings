@@ -37,33 +37,12 @@ module.exports = async function handler(req, res) {
 
 async function validateTicker(ticker) {
     try {
-        // Use Yahoo Finance API to validate
-        const url = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}`;
-
-        const response = await fetch(url, {
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-            }
-        });
-
-        if (!response.ok) {
-            return false;
-        }
-
-        const data = await response.json();
-
-        // Check if ticker exists and has valid data
-        if (data.chart && data.chart.result && data.chart.result.length > 0) {
-            const result = data.chart.result[0];
-            return result.meta && result.meta.symbol === ticker;
-        }
-
-        return false;
+        // For now, use basic format validation only
+        // Will add real API validation after basic functionality works
+        return isValidTickerFormat(ticker);
 
     } catch (error) {
-        console.error('Yahoo Finance validation error:', error);
-
-        // Fallback: Basic format validation
+        console.error('Ticker validation error:', error);
         return isValidTickerFormat(ticker);
     }
 }
