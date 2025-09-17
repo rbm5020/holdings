@@ -1,10 +1,7 @@
 // Portfolio edit endpoint
-// Use global storage shared with portfolios.js
-if (!global.portfolios) {
-    global.portfolios = new Map();
-}
+const portfolios = new Map(); // Shared with portfolios.js
 
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
     // Enable CORS
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, PUT, DELETE, OPTIONS');
@@ -22,7 +19,7 @@ module.exports = async function handler(req, res) {
             return res.status(400).json({ error: 'Portfolio ID and edit secret required' });
         }
 
-        const portfolio = global.portfolios.get(portfolioId);
+        const portfolio = portfolios.get(portfolioId);
 
         if (!portfolio) {
             return res.status(404).json({ error: 'Portfolio not found' });
@@ -34,7 +31,7 @@ module.exports = async function handler(req, res) {
 
         // Check if expired
         if (new Date() > new Date(portfolio.expiresAt)) {
-            global.portfolios.delete(portfolioId);
+            portfolios.delete(portfolioId);
             return res.status(404).json({ error: 'Portfolio expired' });
         }
 
@@ -61,7 +58,7 @@ module.exports = async function handler(req, res) {
             portfolio.email = updateData.email;
             portfolio.expiresAt = calculateExpirationDate(updateData.duration);
 
-            global.portfolios.set(portfolioId, portfolio);
+            portfolios.set(portfolioId, portfolio);
 
             // Generate URLs
             const baseUrl = `https://${req.headers.host}`;
@@ -76,7 +73,7 @@ module.exports = async function handler(req, res) {
 
         } else if (req.method === 'DELETE') {
             // Delete portfolio
-            global.portfolios.delete(portfolioId);
+            portfolios.delete(portfolioId);
 
             return res.status(200).json({
                 success: true,
