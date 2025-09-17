@@ -231,6 +231,9 @@
                 portfolio = data;
                 processPortfolioData();
 
+                // Fetch real-time prices after initial load
+                fetchRealTimePrices();
+
             } catch (error) {
                 console.error('Portfolio loading error:', error);
 
@@ -667,6 +670,50 @@
                 });
             }
         });
+
+        async function fetchRealTimePrices() {
+            try {
+                // Extract unique tickers from portfolio
+                const tickers = [...new Set(portfolio.holdings.map(h => h.ticker))];
+
+                if (tickers.length === 0) return;
+
+                console.log('Fetching real-time prices for:', tickers);
+
+                const response = await fetch('/api/get-prices', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ tickers })
+                });
+
+                const data = await response.json();
+
+                if (data.success && data.prices) {
+                    console.log('Received price data:', data.prices);
+
+                    // Update holdings with real prices
+                    const priceMap = {};
+                    data.prices.forEach(price => {
+                        priceMap[price.ticker] = price;
+                    });
+
+                    // Update portfolio data
+                    portfolio.holdings = portfolio.holdings.map(holding => ({
+                        ...holding,
+                        currentPrice: priceMap[holding.ticker]?.currentPrice || holding.currentPrice,
+                        change: priceMap[holding.ticker]?.change || holding.change,
+                        changePercent: priceMap[holding.ticker]?.changePercent || holding.changePercent
+                    }));
+
+                    // Refresh the display with new prices
+                    processPortfolioData();
+                    console.log('Portfolio updated with real-time prices');
+                }
+            } catch (error) {
+                console.error('Failed to fetch real-time prices:', error);
+                // Continue with placeholder prices
+            }
+        }
 
         // Load portfolio on page load
         loadPortfolio();
