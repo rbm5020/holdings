@@ -52,14 +52,22 @@ export default function handler(req, res) {
                 return res.status(400).json({ error: 'Portfolio ID required' });
             }
 
-            // Mock portfolio data for viewing - will replace with real data later
+            // Load actual portfolio data from storage
+            if (!global.portfolios) {
+                global.portfolios = new Map();
+            }
+
+            const portfolio = global.portfolios.get(portfolioId);
+
+            if (!portfolio) {
+                return res.status(404).json({ error: 'Portfolio not found' });
+            }
+
+            // Return stored portfolio data
             return res.status(200).json({
-                holdings: [
-                    { ticker: 'AAPL', quantity: 10, currentPrice: 150, change: 2.5, category: 'Stocks' },
-                    { ticker: 'BTC-USD', quantity: 0.5, currentPrice: 45000, change: -500, category: 'Crypto' }
-                ],
-                categories: { 'Stocks': 'color-stocks', 'Crypto': 'color-crypto' },
-                categoryOrder: ['Stocks', 'Crypto']
+                holdings: portfolio.holdings || [],
+                categories: portfolio.categories || {},
+                categoryOrder: portfolio.categoryOrder || []
             });
 
         } else {

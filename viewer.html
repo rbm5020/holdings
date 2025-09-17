@@ -220,7 +220,7 @@
             
             try {
                 // Fast loading: Get portfolio structure immediately
-                const response = await fetch(`/api/portfolios/${portfolioId}`);
+                const response = await fetch(`/api/portfolios?portfolioId=${portfolioId}`);
                 const data = await response.json();
 
                 if (!response.ok) {
