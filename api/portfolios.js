@@ -63,8 +63,13 @@ export default function handler(req, res) {
                 return res.status(404).json({ error: 'Portfolio not found' });
             }
 
-            // Get real-time prices for the portfolio holdings
-            const holdingsWithPrices = await fetchRealTimePrices(portfolio.holdings || []);
+            // Add placeholder pricing for now (will fetch real prices later)
+            const holdingsWithPrices = (portfolio.holdings || []).map(holding => ({
+                ...holding,
+                currentPrice: 100,  // Placeholder
+                change: 2.5,        // Placeholder
+                changePercent: 2.5  // Placeholder
+            }));
 
             return res.status(200).json({
                 holdings: holdingsWithPrices,
