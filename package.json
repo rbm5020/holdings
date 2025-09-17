@@ -2,14 +2,13 @@
   "name": "holdingsme",
   "version": "1.0.0",
   "description": "Portfolio snapshot tool",
-  "type": "module",
   "scripts": {
     "dev": "vercel dev",
     "build": "echo 'No build needed'",
     "start": "echo 'Use vercel dev for local development'"
   },
   "dependencies": {
-    "nanoid": "^4.0.2",
-    "node-fetch": "^3.3.2"
+    "nanoid": "^3.3.7",
+    "node-fetch": "^2.6.7"
   }
 }

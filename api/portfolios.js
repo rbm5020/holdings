@@ -1,9 +1,12 @@
-import { nanoid } from 'nanoid';
+const { nanoid } = require('nanoid');
 
 // In-memory storage for now - will replace with database later
-let portfolios = new Map();
+// Using global variable to persist across function calls
+if (!global.portfolios) {
+    global.portfolios = new Map();
+}
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
     // Enable CORS
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
@@ -36,7 +39,7 @@ export default async function handler(req, res) {
             };
 
             // Store portfolio
-            portfolios.set(portfolioId, portfolio);
+            global.portfolios.set(portfolioId, portfolio);
 
             // Generate URLs
             const baseUrl = `https://${req.headers.host}`;
@@ -59,7 +62,7 @@ export default async function handler(req, res) {
                 return res.status(400).json({ error: 'Portfolio ID required' });
             }
 
-            const portfolio = portfolios.get(portfolioId);
+            const portfolio = global.portfolios.get(portfolioId);
 
             if (!portfolio) {
                 return res.status(404).json({ error: 'Portfolio not found' });
@@ -67,7 +70,7 @@ export default async function handler(req, res) {
 
             // Check if expired
             if (new Date() > new Date(portfolio.expiresAt)) {
-                portfolios.delete(portfolioId);
+                global.portfolios.delete(portfolioId);
                 return res.status(404).json({ error: 'Portfolio expired' });
             }
 
