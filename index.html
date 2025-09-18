@@ -81,6 +81,17 @@
             transform: translateX(-50%);
         }
 
+        .chart-line {
+            position: absolute;
+            bottom: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 8px;
+            height: 3px;
+            background: rgba(255,255,255,0.4);
+            border-radius: 1px;
+        }
+
         .logo {
             font-size: 1.75rem;
             font-weight: 800;
@@ -345,7 +356,7 @@
     <div class="container">
         <div class="hero">
             <div class="logo-container">
-                <div class="logo-icon"></div>
+                <div class="logo-icon"><div class="chart-line"></div></div>
                 <span class="logo">Holdings</span><span class="domain">.me</span>
             </div>
 
