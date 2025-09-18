@@ -1,4 +1,74 @@
-export default function handler(req, res) {
+// Supabase configuration
+const SUPABASE_URL = process.env.SUPABASE_URL || 'https://demo.supabase.co';
+const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || 'demo-key';
+
+async function saveToExternalDB(id, portfolio) {
+    try {
+        if (!process.env.SUPABASE_URL) {
+            console.log(`⚠️ No SUPABASE_URL configured - portfolio ${id} saved to memory only`);
+            return true;
+        }
+
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/portfolios`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'apikey': SUPABASE_ANON_KEY,
+                'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                'Prefer': 'return=minimal'
+            },
+            body: JSON.stringify({
+                id: id,
+                data: portfolio,
+                created_at: new Date().toISOString()
+            })
+        });
+
+        if (response.ok) {
+            console.log(`✅ Portfolio ${id} saved to Supabase`);
+            return true;
+        } else {
+            const error = await response.text();
+            console.log(`❌ Supabase save failed for ${id}:`, response.status, error);
+            return false;
+        }
+    } catch (error) {
+        console.log(`❌ Supabase save error for ${id}:`, error.message);
+        return false;
+    }
+}
+
+async function getFromExternalDB(id) {
+    try {
+        if (!process.env.SUPABASE_URL) {
+            console.log(`⚠️ No SUPABASE_URL configured - cannot retrieve portfolio ${id}`);
+            return null;
+        }
+
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/portfolios?id=eq.${id}&select=data`, {
+            headers: {
+                'apikey': SUPABASE_ANON_KEY,
+                'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+            }
+        });
+
+        if (response.ok) {
+            const results = await response.json();
+            if (results && results.length > 0) {
+                console.log(`✅ Found portfolio ${id} in Supabase`);
+                return results[0].data;
+            }
+        }
+
+        console.log(`❌ Portfolio ${id} not found in Supabase`);
+        return null;
+    } catch (error) {
+        console.log(`❌ Supabase get error for ${id}:`, error.message);
+        return null;
+    }
+}
+
+export default async function handler(req, res) {
     // Enable CORS
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -15,7 +85,7 @@ export default function handler(req, res) {
             const portfolioId = Math.random().toString(36).substring(2, 12);
             const editSecret = Math.random().toString(36).substring(2, 22);
 
-            // Store the portfolio data (in-memory for now)
+            // Store the portfolio data
             const portfolio = {
                 id: portfolioId,
                 editSecret,
@@ -27,11 +97,14 @@ export default function handler(req, res) {
                 createdAt: new Date().toISOString()
             };
 
-            // Use global storage
+            // Use global storage as fallback
             if (!global.portfolios) {
                 global.portfolios = new Map();
             }
             global.portfolios.set(portfolioId, portfolio);
+
+            // Save to external database (Supabase)
+            await saveToExternalDB(portfolioId, portfolio);
 
             const baseUrl = `https://${req.headers.host}`;
             const viewUrl = `${baseUrl}/view/${portfolioId}`;
@@ -52,12 +125,25 @@ export default function handler(req, res) {
                 return res.status(400).json({ error: 'Portfolio ID required' });
             }
 
-            // Load actual portfolio data from storage
+            // Load portfolio data with external DB priority
             if (!global.portfolios) {
                 global.portfolios = new Map();
             }
 
-            const portfolio = global.portfolios.get(portfolioId);
+            // Try in-memory first, then external DB
+            let portfolio = global.portfolios.get(portfolioId);
+            if (!portfolio) {
+                console.log('🔍 Not in memory, checking external DB for:', portfolioId);
+                portfolio = await getFromExternalDB(portfolioId);
+                if (portfolio) {
+                    console.log('✅ Found in external DB:', portfolioId);
+                    global.portfolios.set(portfolioId, portfolio); // Cache it
+                } else {
+                    console.log('❌ Not found in external DB:', portfolioId);
+                }
+            } else {
+                console.log('📋 Found in memory:', portfolioId);
+            }
 
             if (!portfolio) {
                 return res.status(404).json({ error: 'Portfolio not found' });
