@@ -10,13 +10,13 @@
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="192x192" href="/android-chrome-192x192.png">
     <link rel="manifest" href="/site.webmanifest">
-    <meta name="theme-color" content="#007aff">
+    <meta name="theme-color" content="#1e40af">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #f5f5f7;
-            color: #333;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            color: #0f172a;
             line-height: 1.6;
             min-height: 100vh;
             display: flex;
@@ -25,7 +25,10 @@
             padding: 20px;
         }
         @media (prefers-color-scheme: dark) {
-            body { background: #1a1a1a; color: #e5e5e7; }
+            body {
+                background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+                color: #f8fafc;
+            }
         }
 
         .branding { text-align: center; margin-bottom: 30px; padding: 20px 0; border-bottom: 1px solid #e2e8f0; }
@@ -45,13 +48,18 @@
         .container {
             max-width: 600px;
             width: 100%;
-            background: white;
-            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
             padding: 40px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(15, 23, 42, 0.08);
         }
         @media (prefers-color-scheme: dark) {
-            .container { background: #2a2a2a; }
+            .container {
+                background: rgba(30, 41, 59, 0.9);
+                border-color: rgba(59, 130, 246, 0.2);
+            }
         }
 
         .success-icon {
@@ -63,17 +71,29 @@
         h1 {
             text-align: center;
             margin-bottom: 30px;
-            color: #34c759;
+            background: linear-gradient(135deg, #1e40af 0%, #3730a3 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
             font-size: 2rem;
+            font-weight: 800;
         }
 
         .warning-box {
-            background: #ff9500;
-            color: white;
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
             padding: 20px;
-            border-radius: 12px;
+            border-radius: 16px;
             margin-bottom: 30px;
-            border: 2px solid #ff8c00;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            backdrop-filter: blur(10px);
+        }
+        @media (prefers-color-scheme: dark) {
+            .warning-box {
+                background: rgba(239, 68, 68, 0.15);
+                color: #fca5a5;
+                border-color: rgba(239, 68, 68, 0.3);
+            }
         }
 
         .warning-title {
@@ -102,47 +122,55 @@
         }
 
         .link-url {
-            background: #f8f9fa;
-            border: 1px solid #e1e5e9;
-            border-radius: 8px;
-            padding: 12px;
+            background: rgba(59, 130, 246, 0.05);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 12px;
+            padding: 16px;
             font-family: monospace;
             font-size: 0.9rem;
             word-break: break-all;
             cursor: pointer;
-            transition: background 0.2s;
+            transition: all 0.2s;
+            backdrop-filter: blur(10px);
         }
         .link-url:hover {
-            background: #e9ecef;
+            background: rgba(59, 130, 246, 0.1);
+            border-color: rgba(59, 130, 246, 0.3);
         }
         @media (prefers-color-scheme: dark) {
             .link-url {
-                background: #3a3a3a;
-                border-color: #4a4a4a;
-                color: #e5e5e7;
+                background: rgba(59, 130, 246, 0.1);
+                border-color: rgba(59, 130, 246, 0.3);
+                color: #e2e8f0;
             }
-            .link-url:hover { background: #4a4a4a; }
+            .link-url:hover {
+                background: rgba(59, 130, 246, 0.15);
+                border-color: rgba(59, 130, 246, 0.4);
+            }
         }
 
         .view-link {
-            color: #34c759;
-            border-color: #34c759;
+            color: #1e40af;
         }
 
         .edit-link {
-            color: #ff9500;
-            border-color: #ff9500;
+            color: #3730a3;
             font-weight: 600;
         }
 
         .email-section {
-            background: #f8f9fa;
-            border-radius: 12px;
-            padding: 20px;
+            background: rgba(59, 130, 246, 0.05);
+            border: 1px solid rgba(59, 130, 246, 0.1);
+            border-radius: 16px;
+            padding: 24px;
             margin-top: 30px;
+            backdrop-filter: blur(10px);
         }
         @media (prefers-color-scheme: dark) {
-            .email-section { background: #3a3a3a; }
+            .email-section {
+                background: rgba(59, 130, 246, 0.1);
+                border-color: rgba(59, 130, 246, 0.2);
+            }
         }
 
         .email-form {
@@ -153,48 +181,77 @@
 
         .email-input {
             flex: 1;
-            padding: 12px;
-            border: 1px solid #e1e5e9;
-            border-radius: 8px;
+            padding: 12px 16px;
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 12px;
             font-size: 1rem;
+            background: rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(10px);
+            transition: all 0.2s;
+        }
+        .email-input:focus {
+            background: rgba(59, 130, 246, 0.1);
+            border-color: #3b82f6;
+            outline: none;
         }
         @media (prefers-color-scheme: dark) {
             .email-input {
-                background: #2a2a2a;
-                border-color: #4a4a4a;
-                color: #e5e5e7;
+                background: rgba(30, 41, 59, 0.5);
+                border-color: rgba(59, 130, 246, 0.3);
+                color: #e2e8f0;
+            }
+            .email-input:focus {
+                background: rgba(59, 130, 246, 0.15);
+                border-color: #60a5fa;
             }
         }
 
         .email-button {
-            background: #007aff;
+            background: linear-gradient(135deg, #1e40af 0%, #3730a3 100%);
             color: white;
             border: none;
-            border-radius: 8px;
-            padding: 12px 20px;
+            border-radius: 12px;
+            padding: 12px 24px;
             font-size: 1rem;
             font-weight: 600;
             cursor: pointer;
-            transition: background 0.2s;
+            transition: all 0.2s;
+            box-shadow: 0 4px 12px rgba(30, 64, 175, 0.25);
         }
         .email-button:hover {
-            background: #0056cc;
+            background: linear-gradient(135deg, #2563eb 0%, #4338ca 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(30, 64, 175, 0.35);
         }
 
         .copy-button {
-            background: #34c759;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            padding: 8px 12px;
+            background: rgba(59, 130, 246, 0.1);
+            color: #1e40af;
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 8px;
+            padding: 10px 16px;
             font-size: 0.9rem;
             font-weight: 600;
             cursor: pointer;
-            margin-top: 8px;
-            transition: background 0.2s;
+            margin-top: 12px;
+            transition: all 0.2s;
+            backdrop-filter: blur(10px);
         }
         .copy-button:hover {
-            background: #28a745;
+            background: rgba(59, 130, 246, 0.15);
+            border-color: rgba(59, 130, 246, 0.3);
+            transform: translateY(-1px);
+        }
+        @media (prefers-color-scheme: dark) {
+            .copy-button {
+                background: rgba(59, 130, 246, 0.15);
+                color: #93c5fd;
+                border-color: rgba(59, 130, 246, 0.3);
+            }
+            .copy-button:hover {
+                background: rgba(59, 130, 246, 0.25);
+                border-color: rgba(59, 130, 246, 0.4);
+            }
         }
 
         .create-another {
@@ -203,12 +260,22 @@
         }
 
         .create-another a {
-            color: #007aff;
+            color: #1e40af;
             text-decoration: none;
             font-weight: 600;
+            transition: color 0.2s;
         }
         .create-another a:hover {
+            color: #3730a3;
             text-decoration: underline;
+        }
+        @media (prefers-color-scheme: dark) {
+            .create-another a {
+                color: #93c5fd;
+            }
+            .create-another a:hover {
+                color: #bfdbfe;
+            }
         }
 
         /* Mobile app-style touch behaviors */

@@ -10,6 +10,14 @@
       "destination": "/creator.html"
     },
     {
+      "source": "/p/RBM32888",
+      "destination": "/analytics.html"
+    },
+    {
+      "source": "/view/RBM32888",
+      "destination": "/analytics.html"
+    },
+    {
       "source": "/view/:id",
       "destination": "/viewer.html"
     },

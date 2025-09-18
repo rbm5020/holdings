@@ -118,11 +118,32 @@
         .spreadsheet-cell:last-child { border-right: none; }
         .cell-input { width: 100%; border: none; background: transparent; padding: 6px; font-size: 14px; outline: none; text-align: center; color: inherit; }
         .cell-input:first-child { text-align: left; }
-        .cell-input:focus { background: rgba(255,255,255,0.1); border: 2px solid #667eea; border-radius: 4px; }
-        .cell-input.valid { border: 2px solid #34c759; border-radius: 4px; }
-        .cell-input.invalid { border: 2px solid #ff3b30; border-radius: 4px; }
-        .cell-input.validating { border: 2px solid #007aff; border-radius: 4px; }
-        @media (prefers-color-scheme: dark) { .cell-input:focus { background: #2a2a2a; color: #f9fafb; } }
+        .cell-input:focus {
+            background: rgba(59, 130, 246, 0.1);
+            border: 2px solid #3b82f6;
+            border-radius: 4px;
+        }
+        .cell-input.valid {
+            border: 2px solid #059669;
+            border-radius: 4px;
+            background: rgba(5, 150, 105, 0.05);
+        }
+        .cell-input.invalid {
+            border: 2px solid #ef4444;
+            border-radius: 4px;
+            background: rgba(239, 68, 68, 0.05);
+        }
+        .cell-input.validating {
+            border: 2px solid #3b82f6;
+            border-radius: 4px;
+            background: rgba(59, 130, 246, 0.05);
+        }
+        @media (prefers-color-scheme: dark) {
+            .cell-input:focus {
+                background: rgba(59, 130, 246, 0.2);
+                color: #f8fafc;
+            }
+        }
         
         .category-dot { width: 24px; height: 24px; border-radius: 50%; border: 2px solid #e5e7eb; cursor: pointer; }
         @media (prefers-color-scheme: dark) { .category-dot { border-color: #6b7280; } }
@@ -153,15 +174,55 @@
         .group-input-container { display: flex; gap: 10px; }
         .add-group-btn { padding: 8px 16px; background: #667eea; color: white; border: none; border-radius: 6px; cursor: pointer; }
         
-        .duration-select, .email-input { width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; background: white; color: #374151; }
-        @media (prefers-color-scheme: dark) { .duration-select, .email-input { background: #2a2a2a; border-color: #6b7280; color: #f9fafb; } }
+        .duration-select, .email-input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.8);
+            color: #0f172a;
+            backdrop-filter: blur(10px);
+            transition: all 0.2s ease;
+        }
+        .duration-select:focus, .email-input:focus {
+            border-color: #3b82f6;
+            background: rgba(59, 130, 246, 0.1);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        @media (prefers-color-scheme: dark) {
+            .duration-select, .email-input {
+                background: rgba(30, 41, 59, 0.8);
+                border-color: rgba(59, 130, 246, 0.3);
+                color: #f8fafc;
+            }
+            .duration-select:focus, .email-input:focus {
+                background: rgba(59, 130, 246, 0.2);
+            }
+        }
         .submit-btn { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 18px 40px; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; width: 100%; }
         .submit-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4); }
         .submit-btn:active { transform: translateY(0px); transition: transform 0.05s; }
         .delete-btn { background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%); color: white; border: none; padding: 18px 40px; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; width: 100%; margin-top: 20px; }
         .delete-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(255, 107, 107, 0.4); }
-        .row-delete { background: #ff3b30; color: white; border: none; border-radius: 4px; width: 24px; height: 24px; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-        .row-delete:hover { background: #d70015; }
+        .row-delete {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            border-radius: 4px;
+            width: 24px;
+            height: 24px;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+        .row-delete:hover {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: rgba(239, 68, 68, 0.4);
+        }
         .drag-handle-row { cursor: move; color: #9ca3af; font-size: 12px; user-select: none; margin-right: 8px; padding: 4px; }
         .spreadsheet-row.dragging { opacity: 0.5; }
         .spreadsheet-row { transition: all 0.1s ease; }
@@ -491,8 +552,8 @@
 
         // Initialize with empty rows (no prefilled data)
         function loadWithDummyData() {
-            // Create 3 empty rows for faster initial load
-            for(let i = 0; i < 3; i++) {
+            // Create 5 empty rows for faster initial load
+            for(let i = 0; i < 5; i++) {
                 createRowWithData();
             }
         }
