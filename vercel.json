@@ -3,6 +3,10 @@
   "rewrites": [
     {
       "source": "/",
+      "destination": "/landing.html"
+    },
+    {
+      "source": "/create",
       "destination": "/creator.html"
     },
     {
