@@ -496,8 +496,8 @@
                 `);
             });
 
-            // Fill remaining slots with empty rows to always have 8 portfolio rows
-            while (rows.length < 8) {
+            // Fill remaining slots with empty rows to always have 7 portfolio rows (8th will be ad row)
+            while (rows.length < 7) {
                 rows.push(`
                     <tr>
                         <td>&nbsp;</td>
@@ -508,7 +508,7 @@
                 `);
             }
 
-            // Add the 9th ad row (taller for future text ads)
+            // Add the 8th ad row (taller for future text ads)
             rows.push(`
                 <tr class="ad-row">
                     <td colspan="4" class="ad-cell">
