@@ -748,6 +748,7 @@
                     const priceMap = {};
                     data.prices.forEach(price => {
                         priceMap[price.ticker] = price;
+                        console.log(`Mapped ${price.ticker}: $${price.currentPrice} (change: ${price.change})`);
                     });
 
                     // Update portfolio data
