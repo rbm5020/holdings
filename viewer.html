@@ -29,7 +29,7 @@
         .container { max-width: 800px; margin: 0 auto; padding: 20px; }
         @media (max-width: 640px) { .container { padding: 1px 8px; } }
         
-        .branding { text-align: center; margin-bottom: 20px; padding: 15px 0; border-bottom: 1px solid #e2e8f0; }
+        .branding { text-align: center; margin-bottom: 30px; padding: 25px 0; border-bottom: 1px solid #e2e8f0; }
         @media (max-width: 640px) { .branding { margin-bottom: 5px; padding: 2px 0; } }
         @media (prefers-color-scheme: dark) { .branding { border-bottom-color: #374151; } }
         .logo-container { display: inline-flex; align-items: center; justify-content: center; background: rgba(15, 23, 42, 0.04); padding: 16px 24px; border-radius: 16px; margin-bottom: 10px; border: 1px solid rgba(15, 23, 42, 0.08); }
@@ -100,6 +100,24 @@
         @media (prefers-color-scheme: dark) { .holdings-table td { border-bottom-color: #404040; } }
         .holdings-table tr:hover { background: rgba(0,0,0,0.02); }
         @media (prefers-color-scheme: dark) { .holdings-table tr:hover { background: rgba(255,255,255,0.05); } }
+
+        /* Ad row styling - separate classes for future monetization */
+        .ad-row { height: 50px; }
+        .ad-row:hover { background: transparent !important; }
+        .ad-cell {
+            padding: 20px 8px !important;
+            text-align: center;
+            vertical-align: middle;
+            border-top: 2px solid #e5e7eb;
+        }
+        @media (prefers-color-scheme: dark) {
+            .ad-cell { border-top-color: #555555; }
+        }
+        .ad-placeholder {
+            color: transparent;
+            user-select: none;
+            pointer-events: none;
+        }
         
         .pagination-container { display: flex; justify-content: center; align-items: center; gap: 15px; margin-bottom: 10px; }
         @media (max-width: 640px) { .pagination-container { margin-bottom: 2px; gap: 8px; } }
@@ -304,7 +322,7 @@
             pages = [];
             
             // Create "All Holdings" pages (overflow goes left)
-            const holdingsPerPage = 10;
+            const holdingsPerPage = 8;
             const totalPages = Math.ceil(allHoldings.length / holdingsPerPage);
             
             // Create overflow pages to the left (negative page numbers)
@@ -478,8 +496,8 @@
                 `);
             });
 
-            // Fill remaining slots with empty rows to always have 10 rows
-            while (rows.length < 10) {
+            // Fill remaining slots with empty rows to always have 8 portfolio rows
+            while (rows.length < 8) {
                 rows.push(`
                     <tr>
                         <td>&nbsp;</td>
@@ -489,6 +507,15 @@
                     </tr>
                 `);
             }
+
+            // Add the 9th ad row (taller for future text ads)
+            rows.push(`
+                <tr class="ad-row">
+                    <td colspan="4" class="ad-cell">
+                        <div class="ad-placeholder">&nbsp;</div>
+                    </td>
+                </tr>
+            `);
 
             tbody.innerHTML = rows.join('');
         }
