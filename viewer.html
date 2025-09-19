@@ -297,8 +297,7 @@
 
         function processPortfolioData() {
             document.getElementById('loading').style.display = 'none';
-            // Don't show portfolio content until real prices are loaded
-            // This prevents the flicker from placeholder to real prices
+            document.getElementById('portfolio-content').style.display = 'block';
 
             // Flatten all holdings
             allHoldings = portfolio.holdings.map(holding => ({
@@ -767,10 +766,7 @@
                         changePercent: priceMap[holding.ticker]?.changePercent || holding.changePercent
                     }));
 
-                    // Show portfolio content now that we have real prices
-                    document.getElementById('portfolio-content').style.display = 'block';
-
-                    // Just update the display without full reprocessing
+                    // Just update the display with real prices
                     updateDisplay();
                     console.log('Portfolio updated with real-time prices');
                 }
