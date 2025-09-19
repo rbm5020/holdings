@@ -95,9 +95,9 @@
         .holdings-table th { background: #f8f9fa; padding: 12px 8px; text-align: left; font-weight: 600; font-size: 12px; color: #555; border-bottom: 1px solid #e5e7eb; }
         @media (max-width: 640px) { .holdings-table th { padding: 6px 6px; } }
         @media (prefers-color-scheme: dark) { .holdings-table th { background: #333333; color: #a1a1aa; border-bottom-color: #555555; } }
-        .holdings-table td { padding: 16px 8px; vertical-align: middle; }
+        .holdings-table td { padding: 16px 8px; border-bottom: 1px solid #f1f3f4; vertical-align: middle; }
         @media (max-width: 640px) { .holdings-table td { padding: 8px 6px; } }
-        @media (prefers-color-scheme: dark) { .holdings-table td { } }
+        @media (prefers-color-scheme: dark) { .holdings-table td { border-bottom-color: #404040; } }
         .holdings-table tr:hover { background: rgba(0,0,0,0.02); }
         @media (prefers-color-scheme: dark) { .holdings-table tr:hover { background: rgba(255,255,255,0.05); } }
 
@@ -108,9 +108,10 @@
             padding: 20px 8px !important;
             text-align: center;
             vertical-align: middle;
+            border-top: 2px solid #e5e7eb;
         }
         @media (prefers-color-scheme: dark) {
-            .ad-cell { }
+            .ad-cell { border-top-color: #555555; }
         }
         .ad-placeholder {
             color: transparent;
