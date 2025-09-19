@@ -488,10 +488,10 @@
                 const dailyChange = holding.shares * (holding.dailyChange || 0);
                 rows.push(`
                     <tr>
-                        <td>${holding.ticker}</td>
-                        <td style="text-align: right;">${formatDollarAmount(holding.currentPrice || 0)}</td>
-                        <td style="text-align: right;" class="${(holding.dailyChange || 0) >= 0 ? 'positive' : 'negative'}">${(holding.dailyChange || 0) >= 0 ? '+' : ''}${formatDailyChange(holding.dailyChange || 0).substring(1)}</td>
-                        <td style="text-align: right;" class="${dailyChange >= 0 ? 'positive' : 'negative'}">${formatDailyChange(Math.abs(dailyChange))}</td>
+                        <td style="font-weight: 600;">${holding.ticker}</td>
+                        <td style="text-align: right; font-weight: 500;">${formatDollarAmount(holding.currentPrice || 0)}</td>
+                        <td style="text-align: right; font-weight: 500;" class="${(holding.dailyChange || 0) >= 0 ? 'positive' : 'negative'}">${(holding.dailyChange || 0) >= 0 ? '+' : ''}${formatDailyChange(holding.dailyChange || 0).substring(1)}</td>
+                        <td style="text-align: right; font-weight: 600;" class="${dailyChange >= 0 ? 'positive' : 'negative'}">${formatDailyChange(Math.abs(dailyChange))}</td>
                     </tr>
                 `);
             });
