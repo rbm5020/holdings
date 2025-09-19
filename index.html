@@ -258,8 +258,9 @@
         }
 
         .holding-item {
-            display: flex;
-            justify-content: space-between;
+            display: grid;
+            grid-template-columns: 1fr auto auto;
+            gap: 16px;
             align-items: center;
             padding: 12px 0;
             border-bottom: 1px solid rgba(15, 23, 42, 0.08);
@@ -283,6 +284,19 @@
         .holding-price {
             font-weight: 600;
             color: #059669;
+        }
+
+        .holding-change {
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .holding-change.positive {
+            color: #059669;
+        }
+
+        .holding-change.negative {
+            color: #dc2626;
         }
 
         /* Flow Section */
@@ -376,18 +390,22 @@
                 <li class="holding-item">
                     <span class="holding-ticker">AAPL</span>
                     <span class="holding-price">$227.85</span>
+                    <span class="holding-change positive">+$342.50</span>
                 </li>
                 <li class="holding-item">
                     <span class="holding-ticker">MSFT</span>
                     <span class="holding-price">$415.92</span>
+                    <span class="holding-change positive">+$267.20</span>
                 </li>
                 <li class="holding-item">
                     <span class="holding-ticker">GOOGL</span>
                     <span class="holding-price">$165.48</span>
+                    <span class="holding-change positive">+$184.75</span>
                 </li>
                 <li class="holding-item">
                     <span class="holding-ticker">NVDA</span>
                     <span class="holding-price">$138.07</span>
+                    <span class="holding-change positive">+$97.70</span>
                 </li>
             </ul>
         </div>
