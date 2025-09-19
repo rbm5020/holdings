@@ -768,6 +768,18 @@
                         changePercent: priceMap[holding.ticker]?.changePercent || holding.changePercent
                     }));
 
+                    // Update pages structure with new prices
+                    pages.forEach(page => {
+                        if (page.holdings) {
+                            page.holdings = page.holdings.map(holding => ({
+                                ...holding,
+                                currentPrice: priceMap[holding.ticker]?.currentPrice || holding.currentPrice,
+                                dailyChange: priceMap[holding.ticker]?.change || holding.dailyChange,
+                                changePercent: priceMap[holding.ticker]?.changePercent || holding.changePercent
+                            }));
+                        }
+                    });
+
                     // Show portfolio content now that we have real prices
                     document.getElementById('portfolio-content').style.display = 'block';
 
